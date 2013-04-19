@@ -1,14 +1,13 @@
 // TODO: Need to remember to implement the other Monad Functions
 // >> and fail, as well as functor stuff?
 module.exports =(function() {
-    var maybe = require("./maybe.js");
     // here wrapper objects are "types" and the actual js objects are the value constructors
+    var maybe = require("./maybe.js");
     var promise = require("./promise.js");
     var either = require("./either.js");
-
-    // writer depends on 'log' being a monoid so you have mempty and mappend
     var writer = require("./writer.js");
     var list = require("./list.js");
+    //
     // TODO: other monads?
 
     var _lift = function() {
