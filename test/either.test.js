@@ -110,3 +110,13 @@ exports.testBind = function(test) {
     test.ok(lresult.match(function(v) { return v; }) === "failed up front");
     test.done();
 };
+
+exports.testFail = function(test) {
+    var either = require("../src/either.js");
+    var failed = false;
+    var msg;
+    either.fail("failure").left(function(v) { failed = true; msg = v; });
+    test.ok(failed);
+    test.ok(msg === "failure");
+    test.done();
+};

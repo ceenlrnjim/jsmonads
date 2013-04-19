@@ -1,4 +1,5 @@
 module.exports = (function() {
+    var defaults = require("./defaults.js");
     var _pure = function(v) {
         return new Right(v);
     };
@@ -11,6 +12,9 @@ module.exports = (function() {
         });
     };
 
+    var _fail = function(str) {
+        return new Left(str);
+    };
 
     var Left = function(v) {
         this.value = v;
@@ -24,8 +28,6 @@ module.exports = (function() {
         return _bind.call(null, this, f);
     };
 
-    Left.prototype.pure = _pure;
-
     Left.prototype.left = function(f) {
         this.match(f,undefined);
         return this;
@@ -34,6 +36,13 @@ module.exports = (function() {
     Left.prototype.right = function(f) {
         return this;
     };
+
+    Left.prototype.sequence = function(f) {
+        return defaults.sequence.call(null, this, f);
+    };
+
+    Left.prototype.fail = _fail;
+    Left.prototype.pure = _pure;
 
     var Right = function(v) {
         this.value = v;
@@ -47,8 +56,6 @@ module.exports = (function() {
         return _bind.call(null, this, f);
     };
 
-    Right.prototype.pure = _pure;
-
     Right.prototype.right = function(f) {
         this.match(undefined, f);
         return this;
@@ -58,6 +65,13 @@ module.exports = (function() {
         return this;
     };
 
-    return {Left:Left, Right:Right, pure:_pure, bind:_bind};
+    Right.prototype.sequence = function(f) {
+        return defaults.sequence.call(null, this, f);
+    };
+
+    Right.prototype.fail = _fail;
+    Right.prototype.pure = _pure;
+
+    return {Left:Left, Right:Right, pure:_pure, bind:_bind, fail: _fail, sequence: defaults.sequence};
 
 })();
