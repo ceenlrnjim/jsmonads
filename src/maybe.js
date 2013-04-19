@@ -1,4 +1,5 @@
 module.exports = (function() {
+    var defaults = require("./defaults.js");
     var _pure = function(v) {
         if (v === undefined || v === null) {
             return new Nothing();
@@ -10,12 +11,20 @@ module.exports = (function() {
         return ma.match(function(v) { return f.call(null,v); }, function() { return ma; });
     };
 
+    var _fail = function(str) {
+        return new Nothing();
+    };
+
     var Just = function(value) {
         this.value = value;
     };
 
     // Putting pure on the object so code that just has an instance of a monad can access it
     Just.prototype.pure = _pure;
+    Just.prototype.fail = _fail;
+    Just.prototype.sequence = function(f) {
+        return defaults.sequence.call(null,this, f);
+    };
     Just.prototype.match = function(j,n) {
         return j(this.value);
     };
@@ -50,5 +59,10 @@ module.exports = (function() {
         return this;
     };
     Nothing.prototype.pure = _pure;
-    return {Just:Just, Nothing:Nothing, pure:_pure, bind:_bind};
+    Nothing.prototype.fail = _fail;
+    Nothing.prototype.sequence = function(f) {
+        return defaults.sequence.call(null,this, f);
+    };
+
+    return {Just:Just, Nothing:Nothing, pure:_pure, bind:_bind, fail:_fail, sequence:defaults.sequence};
 })();

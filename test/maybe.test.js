@@ -108,3 +108,11 @@ exports.testBind = function(test) {
     test.ok(nresult.match(undefined, function() { return "nothing"; }) === "nothing");
     test.done();
 };
+
+exports.testFail = function(test) {
+    var maybe = require("../src/maybe.js");
+    var failed = false;
+    maybe.fail("failed").nothing(function() { failed = true; });
+    test.ok(failed);
+    test.done();
+};
