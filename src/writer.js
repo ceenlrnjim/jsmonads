@@ -1,4 +1,5 @@
 module.exports = (function() {
+    var defaults = require("./defaults.js");
 
     var _bind = function(ma, f) {
         var result = ma.match(f);
@@ -35,6 +36,10 @@ module.exports = (function() {
     Writer.prototype.bind = function(f) {
         return _bind.call(null, this, f);
     };
-    return {Writer:Writer, bind:_bind};
+
+    Writer.prototype.sequence = function(f) {
+        return defaults.sequence.call(null, this, f);
+    };
+    return {Writer:Writer, bind:_bind, fail: defaults.fail, sequence: defaults.sequence};
 
 })();
