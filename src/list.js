@@ -23,6 +23,7 @@ module.exports = (function() {
         return new List(this.contents.concat(otherList.contents));
     };
 
+    // TODO: should argument be array or List? - which is correct, but which is useful?
     List.prototype.mconcat = function(arrayOfLists) {
         return _listConcat.call(null, [this].concat(arrayOfLists));
     };
@@ -53,6 +54,11 @@ module.exports = (function() {
     List.prototype.cons = function(v) {
         return new List([v].concat(this.contents));
     };
+
+    List.prototype.matchHT = function(f) {
+        return f.call(null, this.head(), this.tail());
+    };
+
 
     return {List:List,pure:_pure, bind:_bind};
 

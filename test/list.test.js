@@ -32,6 +32,32 @@ exports.testMappend = function(test) {
     });
     test.done();
 };
+exports.testMconcat = function(test) {
+    var list = require("../src/list.js");
+    var List = list.List;
+    var lone = new List([1]);
+    var larr = [new List([2,2]), new List([3,3,3])];
+    lone.mconcat(larr).match(function (res) {
+        var predicted = [1,2,2,3,3,3];
+        for (var i=0;i<predicted.length;i++) {
+            test.ok(res[i] === predicted[i]);
+        }
+    });
+    test.done();
+};
+
+exports.testBind = function(test) {
+    var list = require("../src/list.js");
+    new list.List([1,2,3]).bind(function(n) {
+        return new list.List([n*1, n*2, n*3]);
+    }).match(function(res) {
+        var predicted = [1,2,3,2,4,6,3,6,9];
+        for (var i=0;i<predicted.length;i++) {
+            test.ok(res[i] === predicted[i]);
+        }
+    });
+    test.done();
+};
 
 //exports.test = function(test) {
     //var list = require("../src/list.js");
