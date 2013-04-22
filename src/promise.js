@@ -29,7 +29,7 @@ module.exports = (function() {
         var promise = new Promise();
         promise.resolve(v);
         return promise;
-        };
+    };
 
     var _bind = function(ma, f) {
         // this f must return another promise, though match is not required to do so

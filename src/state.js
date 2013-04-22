@@ -16,8 +16,8 @@ module.exports = (function() {
             var a = aNewState[0];
             var newState = aNewState[1];
 
-            var stateG = f.call(null, a);
-            return stateG.runState.call(null, newState);
+            var stateG = f.call(null, a); // chain the values from the state into the monadic function
+            return stateG.runState.call(null, newState); // chain prior state and the f-state to get the cumulative state of the two
         });
     };
 
@@ -56,7 +56,7 @@ module.exports = (function() {
         return new State(function(sb) {
             var ares = sma.runState(sb);
             return [f.call(null, ares[0]), ares[1]];
-        };
+        });
     };
 
     return {State:State, bind: _bind, pure: _pure, fail: defaults.fail, sequence: defaults.sequence};

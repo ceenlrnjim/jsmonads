@@ -7,6 +7,7 @@ module.exports =(function() {
     var either = require("./either.js");
     var writer = require("./writer.js");
     var list = require("./list.js");
+    var state = require("./state.js");
     //
     // TODO: other monads?
 
@@ -36,5 +37,5 @@ module.exports =(function() {
         return _liftInternal(f, margs, 0, [], pure);
     };
 
-    return { list:list, maybe: maybe, promise:promise, either:either, writer:writer, lift:_lift, makeMonadic: _makeMonadic };
+    return { state:state, list:list, maybe: maybe, promise:promise, either:either, writer:writer, lift:_lift, makeMonadic: _makeMonadic };
 })();

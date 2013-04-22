@@ -15,6 +15,10 @@ module.exports = (function() {
         return new Nothing();
     };
 
+    var _join = function(mma) {
+        return mma.match(function(j) { return j; }, function(n) { return n; });
+    };
+
     var Just = function(value) {
         this.value = value;
     };
@@ -64,5 +68,7 @@ module.exports = (function() {
         return defaults.sequence.call(null,this, f);
     };
 
-    return {Just:Just, Nothing:Nothing, pure:_pure, bind:_bind, fail:_fail, sequence:defaults.sequence};
+
+
+    return {Just:Just, Nothing:Nothing, pure:_pure, bind:_bind, fail:_fail, sequence:defaults.sequence, join: _join};
 })();
