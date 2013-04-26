@@ -12,30 +12,47 @@ module.exports =(function() {
     // TODO: other monads?
 
     var _lift = function() {
-        var argArray = Array.prototype.splice.call(arguments, 0, arguments.length);
-        var fn = argArray[0];
-        argArray.splice(0,1);
-        return _liftInternal(fn, argArray, 0, [], argArray[0].pure);
+        var argArray = Array.prototype.slice.call(arguments, 0);
+        var monad = argArray[0];
+        var fn = argArray[1];
+        argArray.splice(0,2);
+        return _liftInternal(fn, argArray, 0, [], monad);
     };
 
-    var _liftInternal = function(f, ms, i, vs, pure) {
+    var _liftInternal = function(f, ms, i, vs, monad) {
         if (ms.length === i) {
-            return pure(f.apply(null, vs));
+            return monad.pure(f.apply(null, vs));
         } else {
-            return ms[i].bind(function(v) {
-                return _liftInternal(f, ms, i+1, vs.concat(v), pure);
+            return monad.bind(ms[i], function(v) {
+                return _liftInternal(f, ms, i+1, vs.concat(v), monad);
             });
         }
     };
+
+    var _domonad = function() {
+        var argArray = Array.prototype.splice.call(arguments, 0, arguments.length);
+        var monad = argArray.splice(0,1)[0];
+        var init = argArray.splice(0,1)[0];
+        var fns = argArray;
+
+        var rv = init;
+        for (var i=0,n=fns.length;i<n;i++) {
+            rv = monad.bind(rv, fns[i]);
+        }
+
+        return rv;
+    };
+
+
     //
     // TODO: what is the haskell version of this, or can't I have one since I can't pass the pure function for a typeclass?
     var _makeMonadic = function() {
         var argArray = Array.prototype.splice.call(arguments, 0, arguments.length);
-        var pure = argArray.splice(0,1)[0].pure;
+        var monad = argArray.splice(0,1)[0];
         var f = argArray.splice(0,1)[0];
-        var margs = argArray.map(function(v) { return pure(v); });
-        return _liftInternal(f, margs, 0, [], pure);
+        var margs = argArray.map(function(v) { return monad.pure(v); });
+        return _liftInternal(f, margs, 0, [], monad);
     };
 
-    return { state:state, list:list, maybe: maybe, promise:promise, either:either, writer:writer, lift:_lift, makeMonadic: _makeMonadic };
+    return { state:state, list:list, maybe: maybe, promise:promise, either:either, writer:writer, lift:_lift, makeMonadic: _makeMonadic, domonad:_domonad };
 })();
