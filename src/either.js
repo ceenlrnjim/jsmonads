@@ -1,77 +1,49 @@
 module.exports = (function() {
-    var defaults = require("./defaults.js");
+
+    var _makeResult = function(isRight, v) {
+        return function(l,r) {
+            var f = isRight ? r : l;
+            return f.call(null, v);
+        };
+    };
+
+    var _left = function(v) {
+        return _makeResult(false, v);
+    };
+
+    var _right = function(v) {
+        return _makeResult(true, v);
+    };
+
     var _pure = function(v) {
-        return new Right(v);
+        return _makeResult(true, v);
     };
 
     var _bind = function(ma, f) {
-        return ma.match( function(v) {
-            return new Left(v);
-        }, function(v) {
-            return f.call(null, v);
-        });
+        return ma.call(null, function(e) {
+                        return _makeResult(false, e);
+                      }, function(v) {
+                        return f.call(null, v);
+                      });
     };
 
     var _fail = function(str) {
-        return new Left(str);
+        return _makeResult(false, str);
     };
 
-    var Left = function(v) {
-        this.value = v;
+    var _sequence = function(ma, f) {
+        ma.call(null, function(e) {
+            return f.call(null);
+        }, function(v) {
+            return f.call(null);
+        });
     };
 
-    Left.prototype.match = function(l,r) {
-        return l.call(null, this.value);
+    var _join = function(mma) {
+        var f = function(v) { return v; };
+        return mma.call(null, f,f);
     };
 
-    Left.prototype.bind = function(f) {
-        return _bind.call(null, this, f);
-    };
-
-    Left.prototype.left = function(f) {
-        this.match(f,undefined);
-        return this;
-    };
-
-    Left.prototype.right = function(f) {
-        return this;
-    };
-
-    Left.prototype.sequence = function(f) {
-        return defaults.sequence.call(null, this, f);
-    };
-
-    Left.prototype.fail = _fail;
-    Left.prototype.pure = _pure;
-
-    var Right = function(v) {
-        this.value = v;
-    };
-
-    Right.prototype.match = function(l,r) {
-        return r.call(null, this.value);
-    };
-
-    Right.prototype.bind = function(f) {
-        return _bind.call(null, this, f);
-    };
-
-    Right.prototype.right = function(f) {
-        this.match(undefined, f);
-        return this;
-    };
-
-    Right.prototype.left = function(f) {
-        return this;
-    };
-
-    Right.prototype.sequence = function(f) {
-        return defaults.sequence.call(null, this, f);
-    };
-
-    Right.prototype.fail = _fail;
-    Right.prototype.pure = _pure;
-
-    return {Left:Left, Right:Right, pure:_pure, bind:_bind, fail: _fail, sequence: defaults.sequence};
+    return {pure: _pure, bind: _bind, fail: _fail, sequence: _sequence, join: _join, left:_left, right:_right}
 
 })();

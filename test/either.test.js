@@ -1,122 +1,70 @@
-exports.testMatchRight = function(test) {
-    var either = require("../src/either.js");
-    var rightInvoked = false;
-    var leftInvoked = false;
-    var value;
-
-    new either.Right(100).match(function(v) {
-        value = v;
-        leftInvoked = true;
-    }, function(v) {
-        value = v;
-        rightInvoked = true;
-    });
-
-    test.ok(rightInvoked);
-    test.ok(!leftInvoked);
-    test.ok(value === 100);
-    test.done();
-
-};
-
-exports.testMatchLeft = function(test) {
-    var either = require("../src/either.js");
-    var rightInvoked = false;
-    var leftInvoked = false;
-    var value;
-
-    new either.Left(100).match(function(v) {
-        value = v;
-        leftInvoked = true;
-    }, function() {
-        value = v;
-        rightInvoked = true;
-    });
-
-    test.ok(!rightInvoked);
-    test.ok(leftInvoked);
-    test.ok(value === 100);
-    test.done();
-};
-
-exports.testChainedCallbacks = function(test) {
-    var either = require("../src/either.js");
-    var rightInvoked = false;
-    var leftInvoked = false;
-
-    new either.Right(100).right(function(v) { rightInvoked = true;}).left(function() {leftInvoked = true;});
-    test.ok(rightInvoked);
-    test.ok(!leftInvoked);
-
-    rightInvoked = false;
-    leftInvoked = false;
-
-    new either.Left(100).right(function(v) { rightInvoked = true;}).left(function() {leftInvoked = true;});
-    test.ok(!rightInvoked);
-    test.ok(leftInvoked);
-
-    rightInvoked = false;
-    leftInvoked = false;
-
-    new either.Left(100).left(function() {leftInvoked = true;}).right(function(v) { rightInvoked = true;});
-    test.ok(!rightInvoked);
-    test.ok(leftInvoked);
-
-    rightInvoked = false;
-    leftInvoked = false;
-
-    new either.Right(100).left(function() {leftInvoked = true;}).right(function(v) { rightInvoked = true;});
-    test.ok(rightInvoked);
-    test.ok(!leftInvoked);
-
-    test.done();
-};
 
 exports.testPure = function(test) {
-    var either = require("../src/either.js");
-    var value;
+    var monads = require("../src/jsmonads.js");
+    var either = monads.either;
 
-    either.pure(100).right(function(v) { value = v; });
-
-    test.ok(value === 100);
+    either.pure(100)(function(e) { test.ok(false, "error invoked"); },
+                     function(v) { test.ok(v === 100, "value wasn't 100"); });
     test.done();
-
 };
 
 exports.testBind = function(test) {
-    var either = require("../src/either.js");
-    var r = new either.Right(100);
-    var l = new either.Left("failed up front");
+    var monads = require("../src/jsmonads.js");
+    var either = monads.either;
 
     // some dummy monadic function
-    var mf = function(v) {
-        if (v > 0) {
-            return new either.Right(v*2);
+    var inc = function(v) {
+        if (typeof v === 'number') {
+            return either.right(v+1);
         } else {
-            return new either.Left("can't do negatives");
+            return either.left("Can only support numbers");
         }
-    }
+    };
 
-    var rresult = either.bind(r, mf);
-    var lresult = either.bind(l, mf);
-
-    test.ok(rresult.match(undefined, function(v) { return v; }) === 200);
-    test.ok(lresult.match(function(v) { return v; }) === "failed up front");
-
-    rresult = r.bind(mf);
-    lresult = l.bind(mf);
-
-    test.ok(rresult.match(undefined, function(v) { return v; }) === 200);
-    test.ok(lresult.match(function(v) { return v; }) === "failed up front");
+    test.ok(either.bind(either.right(100), inc)(function (e) { return false; }, function(v) { return v === 101; }));
+    test.ok(either.bind(either.left("error"), inc)(function (e) { return e === "error"; }, function(v) { return false; }));
     test.done();
 };
 
 exports.testFail = function(test) {
-    var either = require("../src/either.js");
-    var failed = false;
-    var msg;
-    either.fail("failure").left(function(v) { failed = true; msg = v; });
-    test.ok(failed);
-    test.ok(msg === "failure");
+    var monads = require("../src/jsmonads.js");
+    var either = monads.either;
+    test.ok(either.fail("error")(function (e) { return e === "error"; }, function(v) { return false; }));
     test.done();
 };
+
+exports.testChaining = function(test) {
+    var monads = require("../src/jsmonads.js");
+    var either = monads.either;
+
+    var inc = function(v) { 
+        if (typeof v !== 'number') {
+            return either.left("non-number value specified");
+        } else {
+            return either.right(v+1); 
+        }
+    };
+
+    var ev = function(v) { return v; };
+
+    test.ok(monads.domonad(either, either.right(0), inc, inc, inc, inc)(ev,ev) === 4);
+    test.ok(monads.domonad(either, either.left("bad"), inc, inc, inc, inc)(ev,ev) === "bad");
+
+    test.done();
+};
+
+exports.testLift = function(test) {
+    var monads = require("../src/jsmonads.js");
+    var either = monads.either;
+
+    var add = function(a,b) {
+        return a + b;
+    };
+    var ev = function(v) { return v; };
+
+    test.ok(monads.lift(either, add, either.right(1), either.right(2))(ev,ev) === 3);
+    test.ok(monads.lift(either, add, either.left("fail"), either.right(2))(ev,ev) === "fail");
+    test.ok(monads.makeMonadic(either, add, 2, 2)(ev,ev) === 4);
+    test.done();
+};
+
