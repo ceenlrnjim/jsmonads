@@ -16,19 +16,24 @@ module.exports = (function() {
     };
 
     var _pure = function(v) {
-        return _makeResult(true, v);
+        return _right(v);
     };
 
     var _bind = function(ma, f) {
-        return ma.call(null, function(e) {
-                        return _makeResult(false, e);
-                      }, function(v) {
-                        return f.call(null, v);
-                      });
+        return ma.call(null, 
+            function(e) {
+                return _left(e);
+            }, function(v) {
+                try {
+                    return f.call(null, v);
+                } catch (e) {
+                    return _left(e);
+                }
+            });
     };
 
     var _fail = function(str) {
-        return _makeResult(false, str);
+        return _left(str);
     };
 
     var _sequence = function(ma, f) {

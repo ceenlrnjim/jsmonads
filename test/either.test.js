@@ -68,3 +68,16 @@ exports.testLift = function(test) {
     test.done();
 };
 
+exports.testJoin = function(test) {
+    var monads = require("../src/jsmonads.js");
+    var either = monads.either;
+    var pv = function(ev) { return function(v) { return ev === v; } };
+    var af = function() { return false; };
+
+    test.ok(either.join(either.right(either.right(100)))(af,pv(100)));
+    test.ok(either.join(either.right(either.left("fail")))(af, pv("fail")));
+    test.ok(either.join(either.left(either.left("fail")))(pv("fail", af)));
+    test.ok(either.join(either.left(either.right(100)))(pv(100), af));
+    test.done();
+};
+
