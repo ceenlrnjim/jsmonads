@@ -44,6 +44,7 @@ module.exports = (function() {
         });
     };
 
+    // TODO: is this the right behavior for nested eithers?
     var _join = function(mma) {
         var f = function(v) { return v; };
         return mma.call(null, f,f);
