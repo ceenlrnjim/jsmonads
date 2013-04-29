@@ -47,8 +47,8 @@ exports.testChaining = function(test) {
 
     var ev = function(v) { return v; };
 
-    test.ok(monads.domonad(either, either.right(0), inc, inc, inc, inc)(ev,ev) === 4);
-    test.ok(monads.domonad(either, either.left("bad"), inc, inc, inc, inc)(ev,ev) === "bad");
+    test.ok(monads.thread(either, either.right(0), inc, inc, inc, inc)(ev,ev) === 4);
+    test.ok(monads.thread(either, either.left("bad"), inc, inc, inc, inc)(ev,ev) === "bad");
 
     test.done();
 };

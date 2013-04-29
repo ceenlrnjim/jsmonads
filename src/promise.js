@@ -1,7 +1,7 @@
 module.exports = (function() {
     // values in the promise monad are functions that take a function and call it when the value is ready
     var defaults = require('./defaults.js');
-    var defaults = require('./list.js');
+    var either = require('./either.js');
 
     var _pure = function(v) {
         return function(cb) {

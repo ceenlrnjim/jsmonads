@@ -10,8 +10,8 @@ exports.testChaining = function(test) {
         }
     };
 
-    test.equal(monads.domonad(maybe, 0, inc, inc, inc, inc), 4, "didn't get 4");
-    test.equal(monads.domonad(maybe, "bill", inc, inc, inc), null, "didn't get null");
+    test.equal(monads.thread(maybe, 0, inc, inc, inc, inc), 4, "didn't get 4");
+    test.equal(monads.thread(maybe, "bill", inc, inc, inc), null, "didn't get null");
 
     test.done();
 };

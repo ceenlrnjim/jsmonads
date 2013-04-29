@@ -31,8 +31,11 @@ module.exports =(function() {
         }
     };
 
-    // TODO: this is not correct - this is chaining output values
-    var _domonad = function() {
+    /**
+     * Pass the result of bind on each monad as the value to bind of the next monad
+     * takes a monad object, an initial monad value, and any number of monadic function arguments
+     */
+    var _thread = function() {
         var argArray = Array.prototype.splice.call(arguments, 0, arguments.length);
         var monad = argArray.splice(0,1)[0];
         var init = argArray.splice(0,1)[0];
@@ -46,6 +49,23 @@ module.exports =(function() {
         return rv;
     };
 
+    /**
+     * As close to haskell's do as I can think of
+     * mdo(maybe, [ma, mb, mc], function(a,b,c) {...});
+     *
+     */
+    var _mdo = function(monad, ms, f) {
+        var _mdoInternal = function(vals,i) {
+            if (i === ms.length) {
+                return f.apply(null, vals);
+            } else {
+                return monad.bind(ms[i], function(v) {
+                    return _mdoInternal(vals.concat([v]), i+1);
+                });
+            }
+        };
+        return _mdoInternal([], 0);
+    };
 
     //
     // TODO: what is the haskell version of this, or can't I have one since I can't pass the pure function for a typeclass?
@@ -57,5 +77,5 @@ module.exports =(function() {
         return _liftInternal(f, margs, 0, [], monad);
     };
 
-    return { reader:reader, state:state, list:list, maybe: maybe, promise:promise, either:either, writer:writer, lift:_lift, makeMonadic: _makeMonadic, domonad:_domonad };
+    return { reader:reader, state:state, list:list, maybe: maybe, promise:promise, either:either, writer:writer, lift:_lift, makeMonadic: _makeMonadic, thread:_thread, mdo:_mdo };
 })();

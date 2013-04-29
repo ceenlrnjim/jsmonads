@@ -37,7 +37,7 @@ exports.testBind = function(test) {
     // State [] int 
     // push/bind/pop builds a function (runState) that has the effect of applying push 3, pop, and pop to some state
     // executing that function against a state [5,8,2,1] returns the final state after all those functions
-    var result = monads.domonad(state, push(3), pop, pop)([5,8,2,1])
+    var result = monads.thread(state, push(3), pop, pop)([5,8,2,1])
     test.ok(result[0] === 5); 
     test.ok(result[1][0] === 8);
     test.ok(result[1][1] === 2);
