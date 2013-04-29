@@ -1,34 +1,27 @@
-exports.testMatch = function(test) {
-    var writer = require("../src/writer.js");
-    var list = require("../src/list.js");
-    var w = new writer.Writer(100, new list.List(["Initial value is 100"]));
-    w.match(function(v,m) {
-        test.ok(v === 100);
-        test.ok(m.contents[0] === "Initial value is 100");
-    });
+exports.testPure = function(test) {
+    var monads = require("../src/jsmonads.js");
+    var writer = monads.writer;
+    var list = monads.list;
 
-    w.withValue(function(v) {
-        test.ok(v === 100);
-    });
-
-    w.withMonoid(function(v) {
-        test.ok(v.contents[0] === "Initial value is 100");
-    });
+    var v = writer.withMonoid(list).pure(100);
+    test.ok(v[0] === 100);
+    test.ok(v[1].length === 0);
     test.done();
 };
 
 exports.testBind = function(test) {
-    var writer = require("../src/writer.js");
-    var list = require("../src/list.js");
-    var w = new writer.Writer(100, new list.List(["Initial value is 100"]));
+    var monads = require("../src/jsmonads.js");
+    var writer = monads.writer;
+    var list = monads.list;
 
-    w.bind(function(v) {
-        return new writer.Writer(v*2, new list.List(["Doubled value " + v]));
-    }).match(function (v,m) {
-        test.ok(v === 200);
-        test.ok(m.contents[0] === "Initial value is 100");
-        test.ok(m.contents[1] === "Doubled value 100");
+    var w = [100, ["Initial value is 100"]];
+
+    var res = writer.withMonoid(list).bind(w, function(v) {
+        return [v*2, ["Doubled value " + v]];
     });
+    test.ok(res[0] === 200);
+    test.ok(res[1][0] === "Initial value is 100");
+    test.ok(res[1][1] === "Doubled value 100");
 
     test.done();
 };

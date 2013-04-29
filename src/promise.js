@@ -1,56 +1,31 @@
 module.exports = (function() {
-    var Promise = function() {
-        this.resolved = false;
-    };
-    var _invokeCallbacks = function(p) {
-        // using one callback for now
-        if (p.callback) {
-            setTimeout(function() { 
-                p.callback.call(null, p.value);
-            }, 0);
-        }
-    };
-    Promise.prototype.resolve = function(v) {
-        if (!this.resolved) {
-            this.resolved = true;
-            this.value = v;
-            _invokeCallbacks(this);
-        }
-    };
-    Promise.prototype.then = function(f) {
-        this.callback = f;
-        if (this.resolved) {
-            _invokeCallbacks(this);
-        }
-    };
-    Promise.prototype.match = Promise.prototype.then;
+    // values in the promise monad are functions that take a function and call it when the value is ready
+    var defaults = require('./defaults.js');
+    var defaults = require('./list.js');
 
     var _pure = function(v) {
-        var promise = new Promise();
-        promise.resolve(v);
-        return promise;
+        return function(cb) {
+            setTimeout(function() {
+                cb.call(null, v);
+            },0);
+        };
     };
 
-    var _bind = function(ma, f) {
-        // this f must return another promise, though match is not required to do so
-        // can't just return fpromise because it doesn't exist yet
-        var promise = new Promise();
-        ma.then(function(v) {
-            var fpromise = f.call(null, v);
-            fpromise.then(function(v2) {
-                promise.resolve(v2);
+    var _bind = function(pa, f) {
+        return function(cb) {
+            pa.call(null, function(pa_v) {
+                f.call(null, pa_v).call(null, cb);
             });
-        });
-        return promise;
-    };
-    
-    Promise.prototype.bind = function(f) {
-        return _bind.call(null, this, f);
+        };
     };
 
-    Promise.prototype.pure = function(v) {
-        return _pure.call(null, v);
+    var _sequence = function(ma, f) {
+        return function(cb) {
+            pa.call(null, function(unused) {
+                f.call(null).call(null, cb);
+            });
+        };
     };
 
-    return {Promise:Promise, pure:_pure, bind:_bind};
+    return {pure:_pure, bind:_bind, fail:defaults.fail, sequence: _sequence};
 })();

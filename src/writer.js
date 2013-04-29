@@ -1,45 +1,38 @@
 module.exports = (function() {
     var defaults = require("./defaults.js");
 
-    var _bind = function(ma, f) {
-        var result = ma.match(f);
-        return new Writer(result.value, ma.monoid.mappend(result.monoid));
-    };
+    var _withMonoid = function(monoid) {
 
-    var _pure = function(v) {
-        // TODO: how will pure work here without a Monoid type specified for w?
-    };
+        var _bind = function(ma, f) {
+            var fres = f.call(null,ma[0]);
+            return [fres[0], monoid.mappend(ma[1], fres[1])];
+        };
 
-    var Writer = function(v, w) {
-        this.value = v;
-        this.monoid = w;
-    };
+        var _pure = function(v) {
+            return [v, monoid.mempty()];
+        };
 
-    Writer.prototype.pure = function(v) {
-        return new Writer(v, this.monoid.mempty());
-    };
+        var _sequence = function(ma, f) {
+            return f.call(null);
+        };
 
-    Writer.prototype.match = function(f) {
-        return f.call(null, this.value, this.monoid);
-    };
+        var _join = function(mma) {
+            [[v,m], m];
+            return [mma[0][0], monoid.mappend(mma[0][1], mma[1])];
+        };
 
-    Writer.prototype.withValue = function(f) {
-        f.call(null, this.value);
-        return this;
-    };
+        var _tell = function(s) {
+            return [[],s];
+        };
 
-    Writer.prototype.withMonoid = function(f) {
-        f.call(null, this.monoid);
-        return this;
-    };
+        var _listen = function(ma) {
+            var a = ma[0];
+            var w = ma[1];
+            return [[a,w],w];
+        }
 
-    Writer.prototype.bind = function(f) {
-        return _bind.call(null, this, f);
+        return {bind:_bind, fail: defaults.fail, pure: _pure, sequence: _sequence, join: _join, tell: _tell, listen:_listen};
     };
-
-    Writer.prototype.sequence = function(f) {
-        return defaults.sequence.call(null, this, f);
-    };
-    return {Writer:Writer, bind:_bind, fail: defaults.fail, sequence: defaults.sequence};
+    return {withMonoid: _withMonoid};
 
 })();

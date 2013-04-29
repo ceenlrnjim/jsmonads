@@ -1,65 +1,39 @@
 module.exports = (function() {
-    var _listConcat = function(arrayOfLists) {
-        return arrayOfLists.reduce(function(r,n) { return r.mappend(n); });
+
+    var _pure = function(v) {
+        return [v];
+    };
+
+    var _mempty = function() {
+        return [];
+    };
+
+    var _mappend = function(anArray, otherArray) {
+        return anArray.concat(otherArray);
+    };
+
+    var _mconcat = function(arrayOfArrays) {
+        //return arrayOfArrays.reduce(function(r,n) { return _mappend(r,n); });
+        return arrayOfArrays.reduce(_mappend);
     };
 
     var _bind = function(ma, f) {
-        return _listConcat(ma.contents.map(f));
+        return _mconcat(ma.map(f));
     };
 
-    var _pure = function(v) {
-        return new List([v]);
-    };
+    var _join = _mconcat;
 
-    var List = function(vals) {
-        this.contents = vals || [];
-    };
-
-    List.prototype.mempty = function() {
-        return new List();
-    };
-
-    List.prototype.mappend = function(otherList) {
-        return new List(this.contents.concat(otherList.contents));
-    };
-
-    // TODO: should argument be array or List? - which is correct, but which is useful?
-    List.prototype.mconcat = function(arrayOfLists) {
-        return _listConcat.call(null, [this].concat(arrayOfLists));
-    };
-
-    List.prototype.bind = function(f) {
-        return _bind.call(null, this, f);
-    };
-
-    List.prototype.pure = _pure;
-
-    List.prototype.match = function(f) {
-        return f.call(null, this.contents);
-    };
-
-    List.prototype.head = function() {
-        return this.contents[0];
-    };
-
-    // just for fun
-    List.prototype.tail = function() {
-        var result = new Array(this.contents.length-1);
-        for (var i=1;i<this.contents.length;i++) {
-            result[i-1] = this.contents[i];
+    var _sequence = function(ma, f) {
+        var mapResult = new Array(ma.length);
+        for (var i=0, n=ma.length;i<n;i++) {
+            mapResult[i] = f.call(null); // stripping out the argument
         }
-        return new List(result);
+        return _mconcat(mapResult);
     };
 
-    List.prototype.cons = function(v) {
-        return new List([v].concat(this.contents));
-    };
+    var _mplus = _mconcat;
+    var _mzero = [];
 
-    List.prototype.matchHT = function(f) {
-        return f.call(null, this.head(), this.tail());
-    };
-
-
-    return {List:List,pure:_pure, bind:_bind};
+    return {pure:_pure, bind:_bind, join: _join, sequence: _sequence, mempty: _mempty, mappend:_mappend, mconcat: _mconcat, mplus: _mplus, mzero: _mzero};
 
 })();

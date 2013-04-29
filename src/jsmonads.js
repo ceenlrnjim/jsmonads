@@ -8,9 +8,11 @@ module.exports =(function() {
     var writer = require("./writer.js");
     var list = require("./list.js");
     var state = require("./state.js");
+    var reader = require("./reader.js");
     //
     // TODO: other monads?
 
+    // lift :: (a -> b -> c) -> m a -> m b -> mc
     var _lift = function() {
         var argArray = Array.prototype.slice.call(arguments, 0);
         var monad = argArray[0];
@@ -29,6 +31,7 @@ module.exports =(function() {
         }
     };
 
+    // TODO: this is not correct - this is chaining output values
     var _domonad = function() {
         var argArray = Array.prototype.splice.call(arguments, 0, arguments.length);
         var monad = argArray.splice(0,1)[0];
@@ -54,5 +57,5 @@ module.exports =(function() {
         return _liftInternal(f, margs, 0, [], monad);
     };
 
-    return { state:state, list:list, maybe: maybe, promise:promise, either:either, writer:writer, lift:_lift, makeMonadic: _makeMonadic, domonad:_domonad };
+    return { reader:reader, state:state, list:list, maybe: maybe, promise:promise, either:either, writer:writer, lift:_lift, makeMonadic: _makeMonadic, domonad:_domonad };
 })();
