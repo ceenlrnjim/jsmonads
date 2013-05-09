@@ -9,6 +9,7 @@ module.exports =(function() {
     var list = require("./list.js");
     var state = require("./state.js");
     var reader = require("./reader.js");
+    var objmon = require("./objectMonoid.js");
     //
     // TODO: other monads?
 
@@ -77,5 +78,5 @@ module.exports =(function() {
         return _liftInternal(f, margs, 0, [], monad);
     };
 
-    return { reader:reader, state:state, list:list, maybe: maybe, promise:promise, either:either, writer:writer, lift:_lift, makeMonadic: _makeMonadic, thread:_thread, mdo:_mdo };
+    return { objmon: objmon, reader:reader, state:state, list:list, maybe: maybe, promise:promise, either:either, writer:writer, lift:_lift, makeMonadic: _makeMonadic, thread:_thread, mdo:_mdo };
 })();
