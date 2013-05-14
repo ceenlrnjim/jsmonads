@@ -28,17 +28,47 @@ module.exports = (function() {
         return satisfies(function(v) { return v === c; });
     };
 
+    var digit = function() {
+        return satisfies(function(c) { return c >= '0' && c <= '9'; });
+    };
+
+    var lower = function() {
+        return satisfies(function(c) { return c >= 'a' && c <= 'z'; });
+    };
+
+    var upper = function() {
+        return satisfies(function(c) { return c >= 'A' && c <= 'Z'; });
+    };
+
+    var letter = function() {
+        return parser.mplus(upper(), lower());
+    };
+
+    var alphanum = function() {
+        return parser.mplus(letter(), digit());
+    };
+
     /* Parser that matches a specific string */
     var stringP = function(s) {
         if (s.length === 0) return parser.pure("");
-        else return mdo(parser, [charP(s[0]), stringP(s.substring(1))], 
-            function(x, xs) {
-                return parser.pure(x + xs);
-            });
+        else return mdo(parser, 
+                        [charP(s[0]), stringP(s.substring(1))], 
+                        function(x, xs) {
+                            return parser.pure(x + xs);
+                        });
+    };
+
+    /* Parser that matches zero or more occurances of another parser */
+    var many = function(p) {
     };
 
     return {item:item,
             satisfies:satisfies,
+            letter:letter,
+            alphanum:alphanum,
+            digit:digit,
+            lower:lower,
+            upper:upper,
             charP:charP,
             stringP:stringP};
 })();

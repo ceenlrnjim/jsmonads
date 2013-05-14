@@ -36,7 +36,7 @@ module.exports = (function() {
 
     var _mplus = function(p, q) { 
         return function(inp) {
-            return p.call(null,inp).concat(q.call(inp));
+            return p.call(null,inp).concat(q.call(null,inp));
         };
     };
 
