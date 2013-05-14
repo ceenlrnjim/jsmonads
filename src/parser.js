@@ -11,9 +11,11 @@ module.exports = (function() {
         return function(inp) {
             var pairlist = ma.call(null, inp);
             var result = [];
-            // the ma parser returns a list of v/output pairs
-            // iterate over each one, passing the v to f to generate a parser
-            // then pass output (the remaining unprocessed text) to that parser
+
+            // each result from ma() (a list of values and remaining text),
+            // since f is monadic, it must return a parser.  So calling
+            // f(value) returns a parser that is then applied to the remaining text
+            // All results are concatenated together and returned
             pairlist.forEach(function(p) {
                 var v = p[0];
                 var out = p[1];

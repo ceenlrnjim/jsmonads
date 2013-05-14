@@ -18,14 +18,9 @@ module.exports = (function() {
     };
 
     var satisfies = function(pred) {
-        //return function(inp) {
-            //return mdo(parser, [item()], function(c) {
-                //return pred.call(null, c) ? parser.pure(c) : parser.mzero();
-            //});
-            return parser.bind(item(), function(c) {
-                return pred.call(null, c) ? parser.pure(c) : parser.mzero();
-            });
-        //};
+        return parser.bind(item(), function(c) {
+            return pred.call(null, c) ? parser.pure(c) : parser.mzero();
+        });
     };
 
     /* Parser that matches a specific character */
@@ -34,10 +29,16 @@ module.exports = (function() {
     };
 
     /* Parser that matches a specific string */
-    var string = function(s) {
+    var stringP = function(s) {
+        if (s.length === 0) return parser.pure("");
+        else return mdo(parser, [charP(s[0]), stringP(s.substring(1))], 
+            function(x, xs) {
+                return parser.pure(x + xs);
+            });
     };
 
     return {item:item,
             satisfies:satisfies,
-            charP:charP};
+            charP:charP,
+            stringP:stringP};
 })();
