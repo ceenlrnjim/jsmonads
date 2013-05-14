@@ -20,8 +20,9 @@ module.exports = (function() {
                 var v = p[0];
                 var out = p[1];
                 var theparser = (f.call(null, v));
+                var parseresult = theparser.call(null,out);
                 // concatenate the returned lists to get back to [ [v,out] ]
-                result = result.concat(theparser.call(null, out));
+                result = result.concat(parseresult);
             });
 
             return result;
@@ -38,6 +39,19 @@ module.exports = (function() {
         return function(inp) {
             return p.call(null,inp).concat(q.call(null,inp));
         };
+    };
+
+    var _toString = function(res) {
+        if (res.length === 0) return "[]";
+        
+        var s = "[";
+        res.forEach(function(p) {
+            if (p.length === 0) s = s + "[],";
+            else s = s + "[" + p[0] +","+p[1] + "]";
+        });
+        s = s + "]";
+
+        return s;
     };
 
     return { pure: _pure, bind: _bind, mplus:_mplus, mzero: _mzero };

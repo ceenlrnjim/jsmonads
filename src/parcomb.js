@@ -12,6 +12,7 @@ module.exports = (function() {
     /* Unconditionally consume 1 character */
     var item = function() {
         return function(inp) {
+            //console.log("item> parsing " + inp);
             if (inp.length === 0) return [];
             else return [ [inp.charAt(0), inp.substring(1)] ];
         };
@@ -54,12 +55,19 @@ module.exports = (function() {
         else return mdo(parser, 
                         [charP(s[0]), stringP(s.substring(1))], 
                         function(x, xs) {
-                            return parser.pure(x + xs);
+                            return parser.pure(x + xs); // TODO: use a function to allow parsing something other than strings
                         });
     };
 
-    /* Parser that matches zero or more occurances of another parser */
-    var many = function(p) {
+    var word = function() {
+        // TODO: need to thing about how mdo would work for monadic values that are functions
+        return parser.mplus(
+            parser.bind(lower(), function(x) {
+                return parser.bind(word(), function(xs) {
+                    return parser.pure(x + xs);
+                });
+            }), 
+            parser.pure(""));
     };
 
     return {item:item,
@@ -70,5 +78,6 @@ module.exports = (function() {
             lower:lower,
             upper:upper,
             charP:charP,
+            word:word,
             stringP:stringP};
 })();
