@@ -49,6 +49,7 @@ module.exports = (function() {
         return parser.mplus(letter(), digit());
     };
 
+
     /* Parser that matches a specific string */
     var stringP = function(s) {
         if (s.length === 0) return parser.pure("");
@@ -59,16 +60,26 @@ module.exports = (function() {
                         });
     };
 
-    var word = function() {
-        // TODO: need to thing about how mdo would work for monadic values that are functions
+    var many = function(p) {
+        // mdo doesn't work here because putting many(p) in the list of monads causes unbroken recursion
         return parser.mplus(
-            parser.bind(lower(), function(x) {
-                return parser.bind(word(), function(xs) {
+            parser.bind(p(), function(x) {
+                return parser.bind(many(p), function(xs) {
                     return parser.pure(x + xs);
                 });
             }), 
             parser.pure(""));
     };
+
+    var many1 = function(p) {
+        // mdo doesn't work here because putting many(p) in the list of monads causes unbroken recursion
+        return parser.bind(p(), function(x) {
+                return parser.bind(many(p), function(xs) {
+                    return parser.pure(x + xs);
+                });
+            });
+    };
+
 
     return {item:item,
             satisfies:satisfies,
@@ -78,6 +89,7 @@ module.exports = (function() {
             lower:lower,
             upper:upper,
             charP:charP,
-            word:word,
+            many:many,
+            many1:many1,
             stringP:stringP};
 })();
