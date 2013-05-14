@@ -10,4 +10,6 @@ module.exports = (function() {
         for (var p in otherObj) { result[p] = otherObj[p]; }
         return result;
     };
+
+    return {mempty: _mempty, mappend: _mappend};
 })();
