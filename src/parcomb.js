@@ -81,7 +81,7 @@ module.exports = (function() {
 
         /* Parser that matches a specific string */
         var stringP = function(s) {
-            if (s.length === 0) return parser.pure(identity); // TODO: need to pure based on whether my source is array or string
+            if (s.length === 0) return parser.pure(identity);
             else return mdo(parser, 
                             [charP(s[0]), stringP(s.substring(1))], 
                             function(x, xs) {
@@ -90,31 +90,91 @@ module.exports = (function() {
         };
 
         var many = function(p) {
-            // mdo doesn't work here because putting many(p) in the list of monads causes unbroken recursion
+            var pwrap = function() { return p; };
+            var manywrap = function() { return many(p); };
             return parser.mplus(
-                parser.bind(p, function(x) {
-                    return parser.bind(many(p), function(xs) {
-                        return parser.pure(xs.cons(x));
-                    });
-                }), 
-                parser.pure(identity)); // TODO: need to pure based on whether my source is array or string
+                _pdo([pwrap, manywrap], function(x,xs) { return xs.cons(x); }),
+                parser.pure(identity));
+                
         };
 
         var many1 = function(p) {
-            // mdo doesn't work here because putting many(p) in the list of monads causes unbroken recursion
-            return parser.bind(p, function(x) {
-                    return parser.bind(many(p), function(xs) {
-                        return parser.pure(xs.cons(x));
-                    });
-                });
+            var pwrap = function() { return p; };
+            var manywrap = function() { return many(p); };
+            return _pdo([pwrap, manywrap], function(x,xs) { return xs.cons(x); });
         };
 
-        //var sepBy1 = function(separator, p) {
-            //return parser.bind(p(), function(x) {
-                //parser.bind(many(parser.bind(separator(),
-            //});
-        //};
+        var sepBy1 = function(p, separator) {
+            var pwrapper = function() { return p; };
+            var sepwrapper = function() { return separator; };
+            var yparser = _pdo([sepwrapper, pwrapper], function(unused, y) { return y; });
+            var xsparser = function() { return many(yparser); };
+            return _pdo([pwrapper, xsparser], function(x,xs) { return xs.cons(x); });
+        };
 
+        var between = function(open, p, close) {
+            // manual laziness
+            var openw = function() { return open; };
+            var pw = function() { return p; };
+            var closew = function() { return closew; };
+
+            return _pdo([openw, pw, closew], function(una, x, unb) { return x; });
+        };
+
+        var sepBy = function(p, sep) {
+            return parser.mplus(sepBy1(p, sep), parser.pure([[]]));
+        };
+
+        var or = function(/* ordered list of parsers */) {
+            var orargs = arguments;
+            return function(inp) {
+                var r;
+                for (var i=0,n=orargs.length;i<n;i++) {
+                    r = orargs[i].call(null, inp);
+                    if (r.length !== 0) {
+                        return r;
+                    }
+                }
+                return [];
+            };
+        };
+
+
+        // TODO: something here isn't right
+        var chainl1 = function(p, op) {
+            var pw = function() { return p; };
+            var opw = function() { return op; };
+            var fysparser = _pdo([opw, pw], function(f,y) { return [f,y]; });
+            var fysparserw = function() { return many(fysparser); };
+
+            return _pdo([pw,fysparserw], function(xinit, fys) {
+                console.log("fys = " + fys + " (" + fys.length + ")");
+                fys.reduce(function(x, fy) {
+                    console.log(" - fy = " + fy);
+                    var f = fy[0];
+                    var y = fy[1];
+                    return f.call(null, x, y);
+                },xinit);
+            });
+        };
+
+        // mdo doesn't work where monad values in the 'ms' list are recursive calls - JS not lazy enough? or am I doing something wrong
+        // so here each monadic value in ms must be a no argument function that returns the monad to be processed
+        // function won't be invoked until ready
+        var _pdo = function(ms, f, ap) {
+            var autopure = ap === undefined ? true : ap;
+            var _pdoInternal = function(vals,i) {
+                if (i === ms.length) {
+                    // WARNING, unlike mdo,pdo will automatically call pure (like the monad comprehension syntax)
+                    return autopure ? parser.pure(f.apply(null, vals)) : f.apply(null,vals);
+                } else {
+                    return parser.bind(ms[i](), function(v) {
+                        return _pdoInternal(vals.concat([v]), i+1);
+                    });
+                }
+            };
+            return _pdoInternal([], 0);
+        };
 
         return {item:item,
                 satisfies:satisfies,
@@ -126,7 +186,13 @@ module.exports = (function() {
                 charP:charP,
                 many:many,
                 many1:many1,
-                stringP:stringP};
+                sepBy1:sepBy1,
+                between:between,
+                sepBy:sepBy,
+                chainl1:chainl1,
+                stringP:stringP,
+                or:or,
+                pdo:_pdo};
     };
 
     return {withIdentity:withIdentity,
