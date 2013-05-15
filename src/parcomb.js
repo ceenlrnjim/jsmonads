@@ -92,7 +92,7 @@ module.exports = (function() {
         var many = function(p) {
             // mdo doesn't work here because putting many(p) in the list of monads causes unbroken recursion
             return parser.mplus(
-                parser.bind(p(), function(x) {
+                parser.bind(p, function(x) {
                     return parser.bind(many(p), function(xs) {
                         return parser.pure(xs.cons(x));
                     });
@@ -102,12 +102,18 @@ module.exports = (function() {
 
         var many1 = function(p) {
             // mdo doesn't work here because putting many(p) in the list of monads causes unbroken recursion
-            return parser.bind(p(), function(x) {
+            return parser.bind(p, function(x) {
                     return parser.bind(many(p), function(xs) {
                         return parser.pure(xs.cons(x));
                     });
                 });
         };
+
+        //var sepBy1 = function(separator, p) {
+            //return parser.bind(p(), function(x) {
+                //parser.bind(many(parser.bind(separator(),
+            //});
+        //};
 
 
         return {item:item,
