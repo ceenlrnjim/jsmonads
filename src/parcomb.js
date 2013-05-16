@@ -15,26 +15,52 @@ module.exports = (function() {
     if (String.prototype.rest === undefined) {
         String.prototype.rest = function() { return this.substring(1); };
     }
-    if (String.prototype.cons === undefined) {
-        String.prototype.cons = function(x) { return x.concat(this); };
-    }
+    //if (String.prototype.cons === undefined) {
+        //String.prototype.cons = function(x) { return x.concat(this); };
+    //}
     if (Array.prototype.tokenAt === undefined) {
         Array.prototype.tokenAt = function(i) { return this[i]; };
     }
     if (Array.prototype.rest === undefined) {
         Array.prototype.rest = function() { return this.slice(1); };
     }
-    if (Array.prototype.cons === undefined) {
-        Array.prototype.cons = function(x) {
-            var r = new Array(this.length + 1);
-            r[0] = x;
-            for (var i=0, n=this.length; i<n;i++) {
-                r[i+1] = this[i];
-            }
-            return r;
-        };
-    }
+    //if (Array.prototype.cons === undefined) {
+        //Array.prototype.cons = function(x) {
+            //var r = new Array(this.length + 1);
+            //r[0] = x;
+            //for (var i=0, n=this.length; i<n;i++) {
+                //r[i+1] = this[i];
+            //}
+            //return r;
+        //};
+    //}
 
+    // Again, unlike haskell, JS strings are not lists of characters, so we have to do
+    // some special logic to handle cons - TODO: not comfortable that this is all correct yet 
+    var cons = function(x,rxs) {
+        var xs;
+        if (typeof x === 'string' && typeof rxs === 'string') {
+            return x.concat(rxs);
+        } else if (typeof x !== 'string' && rxs === '') {
+            xs = [];
+        } else if (typeof x === 'string' && rxs === []) {
+            return x;
+        } else {
+            xs = rxs;
+        }
+
+        var r = new Array(xs.length + 1);
+        r[0] = x;
+        for (var i=0, n=xs.length; i<n;i++) {
+            r[i+1] = xs[i];
+        }
+        return r;
+    };
+
+
+    // This determines if we are going to aggregate as a list or as a string
+    // since in JS a string is not a list of characters, we have separate identity values for the concatenation operation
+    // Parser String should use identity "", any other parser should use identity []
     var withIdentity = function(identity) {
 
 
@@ -81,11 +107,11 @@ module.exports = (function() {
 
         /* Parser that matches a specific string */
         var stringP = function(s) {
-            if (s.length === 0) return parser.pure(identity);
+            if (s.length === 0) return parser.pure(""); // always strings here
             else return mdo(parser, 
                             [charP(s[0]), stringP(s.substring(1))], 
                             function(x, xs) {
-                                return parser.pure(xs.cons(x));
+                                return parser.pure(x.concat(xs)); // always strings here
                             });
         };
 
@@ -93,15 +119,15 @@ module.exports = (function() {
             var pwrap = function() { return p; };
             var manywrap = function() { return many(p); };
             return parser.mplus(
-                _pdo([pwrap, manywrap], function(x,xs) { return xs.cons(x); }),
-                parser.pure(identity));
+                _pdo([pwrap, manywrap], function(x,xs) { debugger; return cons(x,xs); }),
+                parser.pure(identity)); 
                 
         };
 
         var many1 = function(p) {
             var pwrap = function() { return p; };
-            var manywrap = function() { return many(p); };
-            return _pdo([pwrap, manywrap], function(x,xs) { return xs.cons(x); });
+            var manywrap = function() { return many(p); };// intentionally use many not recurse to many1
+            return _pdo([pwrap, manywrap], function(x,xs) { return cons(x,xs); });
         };
 
         var sepBy1 = function(p, separator) {
@@ -109,7 +135,7 @@ module.exports = (function() {
             var sepwrapper = function() { return separator; };
             var yparser = _pdo([sepwrapper, pwrapper], function(unused, y) { return y; });
             var xsparser = function() { return many(yparser); };
-            return _pdo([pwrapper, xsparser], function(x,xs) { return xs.cons(x); });
+            return _pdo([pwrapper, xsparser], function(x,xs) { return cons(x,xs); });
         };
 
         var between = function(open, p, close) {
