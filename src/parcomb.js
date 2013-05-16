@@ -60,7 +60,9 @@ module.exports = (function() {
 
     // This determines if we are going to aggregate as a list or as a string
     // since in JS a string is not a list of characters, we have separate identity values for the concatenation operation
-    // Parser String should use identity "", any other parser should use identity []
+    // identity is used in the many parser (and those that depend on it) to know how to aggregate values together
+    // if your parser is returning a string  (e.g. parsing numbers from digits) use ""
+    // otherwise use [] (for actual numbers, functions, objects, etc that are stored in an array)
     var withIdentity = function(identity) {
 
 
@@ -119,7 +121,7 @@ module.exports = (function() {
             var pwrap = function() { return p; };
             var manywrap = function() { return many(p); };
             return parser.mplus(
-                _pdo([pwrap, manywrap], function(x,xs) { debugger; return cons(x,xs); }),
+                _pdo([pwrap, manywrap], function(x,xs) { return cons(x,xs); }),
                 parser.pure(identity)); 
                 
         };
@@ -142,7 +144,7 @@ module.exports = (function() {
             // manual laziness
             var openw = function() { return open; };
             var pw = function() { return p; };
-            var closew = function() { return closew; };
+            var closew = function() { return close; };
 
             return _pdo([openw, pw, closew], function(una, x, unb) { return x; });
         };
@@ -166,7 +168,10 @@ module.exports = (function() {
         };
 
 
-        // TODO: something here isn't right
+        // chainl1 p op - returns a parser that parses one or more occurrences of p, separated by op 
+        // Returns a value obtained by a left associative application of all functions returned by op 
+        // to the values returned by p. . 
+        // This parser can for example be used to eliminate left recursion which typically occurs in expression grammars.
         var chainl1 = function(p, op) {
             var pw = function() { return p; };
             var opw = function() { return op; };
@@ -174,12 +179,11 @@ module.exports = (function() {
             var fysparserw = function() { return many(fysparser); };
 
             return _pdo([pw,fysparserw], function(xinit, fys) {
-                console.log("fys = " + fys + " (" + fys.length + ")");
-                fys.reduce(function(x, fy) {
-                    console.log(" - fy = " + fy);
+                return fys.reduce(function(x, fy) {
                     var f = fy[0];
                     var y = fy[1];
-                    return f.call(null, x, y);
+                    var r = f.call(null, x, y);
+                    return r;
                 },xinit);
             });
         };
