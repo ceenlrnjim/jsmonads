@@ -167,7 +167,6 @@ module.exports = (function() {
             };
         };
 
-
         // chainl1 p op - returns a parser that parses one or more occurrences of p, separated by op 
         // Returns a value obtained by a left associative application of all functions returned by op 
         // to the values returned by p. . 
@@ -185,6 +184,32 @@ module.exports = (function() {
                     var r = f.call(null, x, y);
                     return r;
                 },xinit);
+            });
+        };
+
+        // TODO: chainl, chainr1, chainr
+
+        var whitespace = function() {
+            return parser.bind(many1(or(charP(" "), charP("\n"), charP("\t"))),
+                function(unused) {
+                    return parser.pure(identity);
+                });
+        };
+        
+        var parse = function(junk, p) {
+            var junkw = function() { return junk; };
+            var pw = function() { return p; };
+            return _pdo([junkw, pw], function(unused, v) {
+                return v;
+            });
+        };
+
+        var token = function(junk, p) {
+            var junkw = function() { return junk; };
+            var pw = function() { return p; };
+
+            return _pdo([pw, junkw], function(v, unused) {
+                return v;
             });
         };
 
@@ -222,6 +247,9 @@ module.exports = (function() {
                 chainl1:chainl1,
                 stringP:stringP,
                 or:or,
+                whitespace:whitespace,
+                parse:parse,
+                token:token,
                 pdo:_pdo};
     };
 
