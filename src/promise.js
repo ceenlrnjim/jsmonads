@@ -27,5 +27,19 @@ module.exports = (function() {
         };
     };
 
+    // f must take two arguments, success and failure callbacks that take [0..1] arguments
+    var _fromCallbacks = function(f) {
+        return function(cb) {
+            var s = function(v) {
+                cb.call(null, either.right(v));
+            };
+            var f = function(r) {
+                cb.call(null, either.left(r));
+            };
+
+            f.call(null, s, f);
+        };
+    };
+
     return {pure:_pure, bind:_bind, fail:defaults.fail, sequence: _sequence};
 })();
