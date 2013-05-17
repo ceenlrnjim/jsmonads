@@ -158,6 +158,7 @@ module.exports = (function() {
             return function(inp) {
                 var r;
                 for (var i=0,n=orargs.length;i<n;i++) {
+                    debugger;
                     r = orargs[i].call(null, inp);
                     if (r.length !== 0) {
                         return r;
@@ -171,6 +172,7 @@ module.exports = (function() {
         // Returns a value obtained by a left associative application of all functions returned by op 
         // to the values returned by p. . 
         // This parser can for example be used to eliminate left recursion which typically occurs in expression grammars.
+        // chainl1 :: Parser a -> Parser (a -> a -> a) -> Parser a
         var chainl1 = function(p, op) {
             var pw = function() { return p; };
             var opw = function() { return op; };
@@ -189,6 +191,8 @@ module.exports = (function() {
 
         // TODO: chainl, chainr1, chainr
 
+        // Note: since this is many1 based, using with parse or token will require at least one
+        // white space before or after - combine with many (Hutton/Meijer use many(or(spaces, comment)))
         var whitespace = function() {
             return parser.bind(many1(or(charP(" "), charP("\n"), charP("\t"))),
                 function(unused) {
@@ -216,6 +220,7 @@ module.exports = (function() {
         // mdo doesn't work where monad values in the 'ms' list are recursive calls - JS not lazy enough? or am I doing something wrong
         // so here each monadic value in ms must be a no argument function that returns the monad to be processed
         // function won't be invoked until ready
+        // TODO: add guards
         var _pdo = function(ms, f, ap) {
             var autopure = ap === undefined ? true : ap;
             var _pdoInternal = function(vals,i) {
