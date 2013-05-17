@@ -41,5 +41,27 @@ module.exports = (function() {
         };
     };
 
-    return {bind: _bind, pure: _pure, fail: defaults.fail, sequence: defaults.sequence, mapState:_mapState};
+    // update :: (s -> s) -> State s s
+    var _update = function(f) {
+        return function(st) {
+            return [st, f.call(null, st)];
+        };
+    };
+
+    var _set = function(st) {
+        return update(function(unused) { return st; });
+    };
+
+    var _fetch = function() {
+        return update(function(st) { return st; });
+    };
+
+    return {bind: _bind, 
+            pure: _pure, 
+            fail: defaults.fail, 
+            sequence: defaults.sequence, 
+            mapState:_mapState, 
+            set:_set,
+            fetch: _fetch,
+            update:_update};
 })();
