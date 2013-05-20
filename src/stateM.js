@@ -37,7 +37,7 @@ module.exports = (function() {
 
         var _update = function(f) {
             return function(s) {
-                return monad.pure(s, f.call(null,s));
+                return monad.pure([s, f.call(null,s)]);
             };
         };
 
