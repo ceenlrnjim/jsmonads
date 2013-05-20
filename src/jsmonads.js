@@ -8,6 +8,7 @@ module.exports =(function() {
     var writer = require("./writer.js");
     var list = require("./list.js");
     var state = require("./state.js");
+    var stateM = require("./stateM.js");
     var reader = require("./reader.js");
     var objmon = require("./objectMonoid.js");
     var parser = require("./parser.js");
@@ -83,6 +84,7 @@ module.exports =(function() {
              objmon: objmon, 
              reader:reader, 
              state:state, 
+             stateM:stateM,
              list:list, 
              maybe: maybe, 
              promise:promise, 
