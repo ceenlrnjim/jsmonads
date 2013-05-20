@@ -1,9 +1,9 @@
 module.exports = (function() {
     var monads = require("./jsmonads.js");
-    var parser = monads.parser;
     var mdo = monads.mdo;
     var thread = monads.thread;
-    var stateM = monads.stateM.withMonad(monads.list);
+    //var parser = monads.parser;
+    var parser = monads.stateM.withMonad(monads.list);
 
     if (String.prototype.tokenAt === undefined) {
         String.prototype.tokenAt = String.prototype.charAt;
@@ -53,20 +53,20 @@ module.exports = (function() {
         var item = function() {
             var tail = function(inp) { return inp.rest(); };
 
-            return stateM.bind(stateM.update(tail),
+            return parser.bind(parser.update(tail),
                 function(ss) {
                     if (ss.length === 0) {
-                        return stateM.mzero();
+                        return parser.mzero();
                     } else{
-                        return stateM.pure(ss.tokenAt(0));
+                        return parser.pure(ss.tokenAt(0));
                     }
                 });
 
         };
 
         var satisfies = function(pred) {
-            return stateM.bind(item(), function(c) {
-                return pred.call(null, c) ? stateM.pure(c) : stateM.mzero();
+            return parser.bind(item(), function(c) {
+                return pred.call(null, c) ? parser.pure(c) : parser.mzero();
             });
         };
 
@@ -215,9 +215,9 @@ module.exports = (function() {
             var _pdoInternal = function(vals,i) {
                 if (i === ms.length) {
                     // WARNING, unlike mdo,pdo will automatically call pure (like the monad comprehension syntax)
-                    return autopure ? stateM.pure(f.apply(null, vals)) : f.apply(null,vals);
+                    return autopure ? parser.pure(f.apply(null, vals)) : f.apply(null,vals);
                 } else {
-                    return stateM.bind(ms[i](), function(v) {
+                    return parser.bind(ms[i](), function(v) {
                         return _pdoInternal(vals.concat([v]), i+1);
                     });
                 }
