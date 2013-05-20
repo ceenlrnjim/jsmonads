@@ -35,3 +35,46 @@ exports.testSatisfies = function(test) {
     test.done();
 };
 
+exports.testCharP = function(test) {
+    var monads = require("../src/jsmonads.js");
+    var pc = require("../src/parcomb.js").stringParser;
+
+    var r = pc.charP("J")("Jim");
+    checkFirstResult(test,r,"J","im");
+
+    r = pc.charP("J")("Bill");
+    test.ok(r.length === 0);
+
+    test.done();
+};
+
+exports.testStringP = function(test) {
+    var monads = require("../src/jsmonads.js");
+    var pc = require("../src/parcomb.js").stringParser;
+
+    var r = pc.stringP("Jim")("Jim Kirkwood");
+    checkFirstResult(test,r,"Jim", " Kirkwood");
+
+    r = pc.stringP("Jim")("Jane Smith");
+    test.ok(r.length === 0);
+
+    test.done();
+};
+
+exports.testMany = function(test) {
+    var monads = require("../src/jsmonads.js");
+    var pc = require("../src/parcomb.js").stringParser;
+
+    var p = pc.many(pc.digit());
+    var r = p("123abc456");
+    console.log(r);
+    checkFirstResult(test, r, "123", "abc456");
+
+    r = p("1abc");
+    checkFirstResult(test,r,"1","abc");
+
+    r = p("abc123");
+    checkFirstResult(test,r,"","abc123");
+
+    test.done();
+};

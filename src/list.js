@@ -35,7 +35,7 @@ module.exports = (function() {
         return _mconcat(mapResult);
     };
 
-    var _mplus = _mconcat;
+    var _mplus = _mappend
     var _mzero = function() { return []; };
 
     return {pure:_pure, bind:_bind, join: _join, sequence: _sequence, mempty: _mempty, mappend:_mappend, mconcat: _mconcat, mplus: _mplus, mzero: _mzero};
