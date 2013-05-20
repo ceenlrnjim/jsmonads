@@ -11,7 +11,7 @@ module.exports =(function() {
     var stateM = require("./stateM.js");
     var reader = require("./reader.js");
     var objmon = require("./objectMonoid.js");
-    var parser = require("./parser.js");
+    //var parser = require("./parser.js");
     //
     // TODO: other monads?
 
@@ -80,7 +80,7 @@ module.exports =(function() {
         return _liftInternal(f, margs, 0, [], monad);
     };
 
-    return { parser: parser, 
+    return { parser: stateM.withMonad(list), 
              objmon: objmon, 
              reader:reader, 
              state:state, 

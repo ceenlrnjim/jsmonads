@@ -14,7 +14,11 @@ module.exports = (function() {
 
     var _mconcat = function(arrayOfArrays) {
         //return arrayOfArrays.reduce(function(r,n) { return _mappend(r,n); });
-        return arrayOfArrays.reduce(_mappend);
+        if (arrayOfArrays.length === 0) {
+            return arrayOfArrays;
+        } else {
+            return arrayOfArrays.reduce(_mappend);
+        }
     };
 
     var _bind = function(ma, f) {
