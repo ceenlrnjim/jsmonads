@@ -169,3 +169,24 @@ exports.testOr = function(test) {
 
     test.done();
 };
+
+exports.testChainl1 = function(test) {
+    var monads = require("../src/jsmonads.js");
+    var pcs = require("../src/parcomb.js").stringParser;
+    var pca = require("../src/parcomb.js").arrayParser;
+    var parser = monads.parser;
+
+    var op = parser.bind(pca.charP("+"), function(plus) {
+        return parser.pure(function(a,b) { return a + b; });
+    });
+
+    var num = parser.bind(pcs.many1(pcs.digit()), function(n) {
+        return parser.pure(eval(n));
+    });
+
+    var p = pca.chainl1(num, op);
+    var r = p("1+2+3");
+    checkFirstResult(test,r,6,"");
+
+    test.done();
+};
