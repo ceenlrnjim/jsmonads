@@ -139,7 +139,7 @@ module.exports = (function() {
         };
 
         var sepBy = function(p, sep) {
-            return parser.mplus(sepBy1(p, sep), parser.pure([[]]));
+            return parser.mplus(sepBy1(p, sep), parser.pure(identity));
         };
 
         var or = function(/* ordered list of parsers */) {
