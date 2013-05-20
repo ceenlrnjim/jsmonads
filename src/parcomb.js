@@ -55,8 +55,13 @@ module.exports = (function() {
 
             return stateM.bind(stateM.update(tail),
                 function(ss) {
-                    return stateM.pure(ss.tokenAt(0));
+                    if (ss.length === 0) {
+                        return stateM.mzero();
+                    } else{
+                        return stateM.pure(ss.tokenAt(0));
+                    }
                 });
+
         };
 
         var satisfies = function(pred) {
