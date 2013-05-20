@@ -1,13 +1,9 @@
-// TODO: can I apply the monad library to build a parser/combinator library
-// Then, can I build a parser combinator library that parses JS objects instead of strings
-// for making javascript DSLs?
-//
-
 module.exports = (function() {
     var monads = require("./jsmonads.js");
     var parser = monads.parser;
     var mdo = monads.mdo;
     var thread = monads.thread;
+    var stateM = monads.stateM.withMonad(monads.list);
 
     if (String.prototype.tokenAt === undefined) {
         String.prototype.tokenAt = String.prototype.charAt;
@@ -15,25 +11,12 @@ module.exports = (function() {
     if (String.prototype.rest === undefined) {
         String.prototype.rest = function() { return this.substring(1); };
     }
-    //if (String.prototype.cons === undefined) {
-        //String.prototype.cons = function(x) { return x.concat(this); };
-    //}
     if (Array.prototype.tokenAt === undefined) {
         Array.prototype.tokenAt = function(i) { return this[i]; };
     }
     if (Array.prototype.rest === undefined) {
         Array.prototype.rest = function() { return this.slice(1); };
     }
-    //if (Array.prototype.cons === undefined) {
-        //Array.prototype.cons = function(x) {
-            //var r = new Array(this.length + 1);
-            //r[0] = x;
-            //for (var i=0, n=this.length; i<n;i++) {
-                //r[i+1] = this[i];
-            //}
-            //return r;
-        //};
-    //}
 
     // Again, unlike haskell, JS strings are not lists of characters, so we have to do
     // some special logic to handle cons - TODO: not comfortable that this is all correct yet 
@@ -68,16 +51,17 @@ module.exports = (function() {
 
         /* Unconditionally consume 1 character */
         var item = function() {
-            return function(inp) {
-                //console.log("item> parsing " + inp);
-                if (inp.length === 0) return [];
-                else return [ [inp.tokenAt(0), inp.rest()] ];
-            };
+            var tail = function(inp) { return inp.rest(); };
+
+            return stateM.bind(stateM.update(tail),
+                function(ss) {
+                    return stateM.pure(ss.tokenAt(0));
+                });
         };
 
         var satisfies = function(pred) {
-            return parser.bind(item(), function(c) {
-                return pred.call(null, c) ? parser.pure(c) : parser.mzero();
+            return stateM.bind(item(), function(c) {
+                return pred.call(null, c) ? stateM.pure(c) : stateM.mzero();
             });
         };
 
@@ -226,9 +210,9 @@ module.exports = (function() {
             var _pdoInternal = function(vals,i) {
                 if (i === ms.length) {
                     // WARNING, unlike mdo,pdo will automatically call pure (like the monad comprehension syntax)
-                    return autopure ? parser.pure(f.apply(null, vals)) : f.apply(null,vals);
+                    return autopure ? stateM.pure(f.apply(null, vals)) : f.apply(null,vals);
                 } else {
-                    return parser.bind(ms[i](), function(v) {
+                    return stateM.bind(ms[i](), function(v) {
                         return _pdoInternal(vals.concat([v]), i+1);
                     });
                 }
