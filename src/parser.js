@@ -96,7 +96,7 @@ module.exports = (function() {
                         });
                 },
                 consumedError: function(reply) {
-                    return reply;
+                    return _consumed(reply);
                 }});
                             
 

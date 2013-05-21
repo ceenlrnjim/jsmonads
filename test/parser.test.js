@@ -31,16 +31,30 @@ exports.testBind = function(test) {
     var p = pc.digit()
     var pb = parser.bind(pc.digit(), pc.digit);
 
-    var fail = function() { test.ok(false); };
+    var fail = function(msg) { return function(reply) { console.log(reply); test.ok(false,msg); } };
+    var pass = function(reply) { console.log(reply); test.ok(true); };
 
     parser.match(pb("123"), {
-        emptyOk: fail,
-        emptyError: fail,
+        emptyOk: fail("emptyOk"),
+        emptyError: fail("emptyError"),
         consumedOk: function(x, rest) {
             test.ok(x === "2", "X expected 2 but got " + x);
             test.ok(rest === "3", "rest expected 3 but got " + rest);
         },
-        consumedError: fail});
+        consumedError: fail("consumedError")});
+
+    parser.match(pb("a3"), {
+        emptyOk: fail("emptyOk"),
+        emptyError: pass,
+        consumedOk: fail("consumedOk"),
+        consumedError: fail("consumedError")});
+
+    parser.match(pb("1a3"), {
+        emptyOk: fail("emptyOk"),
+        emptyError: fail("emptyError"),
+        consumedOk: fail("consumedOk"),
+        consumedError: pass});
+
 
 
     test.done();
