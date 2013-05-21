@@ -1,9 +1,14 @@
+var rt = function() { return true; };
+var rf = function() { return false; };
 var checkFirstResult = function(test, r, val, state) {
-    test.ok(r[0].length === 2);
-    test.ok(r[0][0] === val);
-    test.ok(r[0][1] === state);
+    test.strictEqual(r.reply.result, val, "value: expected " + val + " got " + r.reply.result);
+    test.strictEqual(r.reply.rest, state, "rest: expected " + state + " got " + r.reply.rest);
+    //test.ok(r[0].length === 2);
+    //test.ok(r[0][0] === val);
+    //test.ok(r[0][1] === state);
 };
 
+/*
 exports.testItem = function(test) {
     var monads = require("../src/jsmonads.js");
     var pc = require("../src/parcomb.js").stringParser;
@@ -17,10 +22,12 @@ exports.testItem = function(test) {
     test.ok(pc.item()("").length === 0);
     test.done();
 };
+*/
 
 exports.testSatisfies = function(test) {
     var monads = require("../src/jsmonads.js");
     var pc = require("../src/parcomb.js").stringParser;
+    var parser = require("../src/parser.js");
 
     var p = pc.satisfies(function(c) { return c === '1' || c === '2' || c === '3'; });
     var r = p.call(null, "111")
@@ -30,11 +37,12 @@ exports.testSatisfies = function(test) {
     checkFirstResult(test,r,"2","11");
 
     r = p.call(null, "411");
-    test.ok(r.length === 0);
+    test.ok(!parser.caseReply(r, rt, rf));
 
     test.done();
 };
 
+/*
 exports.testCharP = function(test) {
     var monads = require("../src/jsmonads.js");
     var pc = require("../src/parcomb.js").stringParser;
@@ -190,3 +198,4 @@ exports.testChainl1 = function(test) {
 
     test.done();
 };
+*/

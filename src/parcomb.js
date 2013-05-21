@@ -2,8 +2,14 @@ module.exports = (function() {
     var monads = require("./jsmonads.js");
     var mdo = monads.mdo;
     var thread = monads.thread;
-    //var parser = monads.parser;
-    var parser = monads.stateM.withMonad(monads.list);
+    var parser = monads.parser;
+    //var parser = monads.stateM.withMonad(monads.list);
+    var empty = parser.empty;
+    var ok = parser.ok;
+    var error = parser.error;
+    var consumed = parser.consumed;
+    var lzError = parser.lzError;
+    var lzConsumed = parser.lzConsumed;
 
     if (String.prototype.tokenAt === undefined) {
         String.prototype.tokenAt = String.prototype.charAt;
@@ -65,9 +71,18 @@ module.exports = (function() {
         };
 
         var satisfies = function(pred) {
-            return parser.bind(item(), function(c) {
-                return pred.call(null, c) ? parser.pure(c) : parser.mzero();
-            });
+            return function(inp) {
+                var next, rest;
+
+                if (inp.length === 0) {
+                    return empty(error());
+                } else {
+                    next = inp.tokenAt(0);
+                    return pred.call(null, next) ? 
+                                consumed(ok(next, inp.rest())) : 
+                                empty(error());
+                }
+            };
         };
 
         /* Parser that matches a specific character */
@@ -147,7 +162,6 @@ module.exports = (function() {
             return function(inp) {
                 var r;
                 for (var i=0,n=orargs.length;i<n;i++) {
-                    debugger;
                     r = orargs[i].call(null, inp);
                     if (r.length !== 0) {
                         return r;
