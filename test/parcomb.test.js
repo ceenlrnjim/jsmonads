@@ -6,7 +6,11 @@ var checkFirstResult = function(test, parser, r, val, state) {
     var matches = parser.match(r, {
         emptyOk: function(x,rest) { mt="emptyOk"; av=x; as=rest; return x === val && rest === state; },
         emptyError: function() { mt="emptyError"; return false; },
-        consumedOk: function(x,rest) { mt="consumedOk"; av=x; as=rest; return x === val && rest === state; },
+        consumedOk: function(x,rest) { 
+            mt="consumedOk"; 
+            av=x; 
+            as=rest; 
+            return x === val && rest === state; },
         consumedError: function() { mt="consumedError"; return false; }});
         
     
@@ -89,7 +93,6 @@ exports.testChoice = function(test) {
     var p = pc.choice(d,u);
     checkFirstResult(test, parser, p(ns("123")), "1", "23");
     checkFirstResult(test, parser, p(ns("ABC")), "A", "BC");
-    console.log(p(ns("abc")).replyFn());
     test.ok(!parser.caseReply(p(ns("abc")), rt, rf));
     test.done();
 };
@@ -111,25 +114,25 @@ exports.testOr = function(test) {
     test.ok(!parser.caseReply(p(ns("!abc")), rt, rf));
     test.done();
 };
-/*
 
 exports.testMany1 = function(test) {
     var monads = require("../src/jsmonads.js");
     var pc = require("../src/parcomb.js").stringParser;
     var parser = monads.parser;
+    var ns = function(input) { return parser.state(input, parser.position(1,1)); };
     
     var p = pc.many1(pc.lower());
-    var r = p("abc123");
-    console.log(r.replyFn());
+    var r = p(ns("abc123"));
     checkFirstResult(test,parser, r,"abc","123");
 
-    r = p("123abc");
+    r = p(ns("123abc"));
     test.ok(!parser.caseReply(r, rt, rf));
 
     test.done();
 };
 
 
+/*
 
 
 exports.testMany = function(test) {

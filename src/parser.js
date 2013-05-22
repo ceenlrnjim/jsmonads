@@ -86,7 +86,6 @@ module.exports = (function() {
     };
 
     var _pure = function(v) { 
-        // inp is now State
         return function(s) {
             return _empty(_ok(v, s, _message(s.pos, "", [])));
         };
@@ -101,7 +100,7 @@ module.exports = (function() {
                     return f.call(null, x).call(null, reply.state); 
                 },
                 emptyError: function(reply) { 
-                    return _empty(_error(message(s.pos,"",[]))); 
+                    return _empty(_error(_message(s.pos,"",[]))); 
                 },
                 // TODO: lazy here is a bit different than original
                 consumedOk: function(x,rest,reply) {
@@ -130,7 +129,8 @@ module.exports = (function() {
     };
 
     var _mergeOk = function(v, input, msg1, msg2) {
-        return _empty(_ok(v, input, _merge(inp1, inp2)));
+        // TODO: which position should be used here?
+        return _empty(_ok(v, _state(input, msg2.pos), _merge(msg1, msg2)));
     };
 
     var _mergeError = function(msg1,msg2) {
@@ -153,7 +153,7 @@ module.exports = (function() {
                             return _mergeError(msg, msg2);
                         },
                         emptyOk: function(x, rest,reply) {
-                            _mergeOk(x, rest, msg, reply.msg);
+                            return _mergeOk(x, rest, msg, reply.msg);
                         },
                         otherwise: function(reply) { // consumed
                             return reply;
@@ -161,7 +161,7 @@ module.exports = (function() {
                 },
                 // if p succeeds without consuming input, q is favored if it does consume input (longest match rule)
                 emptyOk: function(reply) { 
-                    return _caseConsumed(q.call(null, inp),
+                    return _caseConsumed(q.call(null, s),
                         function onEmpty() { return empty(reply); },
                         function onConsumed(r2) { return r2; });
                     },
