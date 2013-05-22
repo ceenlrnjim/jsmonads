@@ -1,11 +1,16 @@
 var rt = function() { return true; };
 var rf = function() { return false; };
-var checkFirstResult = function(test, r, val, state) {
-    test.strictEqual(r.reply.result, val, "value: expected " + val + " got " + r.reply.result);
-    test.strictEqual(r.reply.rest, state, "rest: expected " + state + " got " + r.reply.rest);
-    //test.ok(r[0].length === 2);
-    //test.ok(r[0][0] === val);
-    //test.ok(r[0][1] === state);
+var checkFirstResult = function(test, parser, r, val, state) {
+
+    var av,as;
+    var matches = parser.match(r, {
+        emptyOk: function(x,rest) { av=x; as=rest; return x === val && rest === state; },
+        emptyError: function() { return false; },
+        consumedOk: function(x,rest) { av=x; as=rest; return x === val && rest === state; },
+        consumedError: function() { return false; }});
+        
+    
+    test.ok(matches, "value: expected " + val + "," + state + " got " + av + "," + as);
 };
 
 /*
@@ -31,10 +36,11 @@ exports.testSatisfies = function(test) {
 
     var p = pc.satisfies(function(c) { return c === '1' || c === '2' || c === '3'; });
     var r = p.call(null, "111")
-    checkFirstResult(test, r, "1", "11");
+    console.log(r);
+    checkFirstResult(test, parser, r, "1", "11");
     
     r = p.call(null, "211");
-    checkFirstResult(test,r,"2","11");
+    checkFirstResult(test, parser,r,"2","11");
 
     r = p.call(null, "411");
     test.ok(!parser.caseReply(r, rt, rf));
@@ -42,16 +48,16 @@ exports.testSatisfies = function(test) {
     test.done();
 };
 
-/*
 exports.testCharP = function(test) {
     var monads = require("../src/jsmonads.js");
     var pc = require("../src/parcomb.js").stringParser;
+    var parser = require("../src/parser.js");
 
     var r = pc.charP("J")("Jim");
-    checkFirstResult(test,r,"J","im");
+    checkFirstResult(test, parser,r,"J","im");
 
     r = pc.charP("J")("Bill");
-    test.ok(r.length === 0);
+    test.ok(!parser.caseReply(r, rt, rf));
 
     test.done();
 };
@@ -59,15 +65,50 @@ exports.testCharP = function(test) {
 exports.testStringP = function(test) {
     var monads = require("../src/jsmonads.js");
     var pc = require("../src/parcomb.js").stringParser;
+    var parser = require("../src/parser.js");
 
     var r = pc.stringP("Jim")("Jim Kirkwood");
-    checkFirstResult(test,r,"Jim", " Kirkwood");
+    checkFirstResult(test, parser,r,"Jim", " Kirkwood");
 
     r = pc.stringP("Jim")("Jane Smith");
-    test.ok(r.length === 0);
+    test.ok(!parser.caseReply(r, rt, rf));
 
     test.done();
 };
+
+exports.testChoice = function(test) {
+    var monads = require("../src/jsmonads.js");
+    var pc = require("../src/parcomb.js").stringParser;
+    var parser = require("../src/parser.js");
+
+    var d = pc.digit();
+    var u = pc.upper();
+    var p = pc.choice(d,u);
+    checkFirstResult(test, parser, p("123"), "1", "23");
+    checkFirstResult(test, parser, p("ABC"), "A", "BC");
+    test.ok(!parser.caseReply(p("abc"), rt, rf));
+    test.done();
+};
+
+exports.testOr = function(test) {
+    var monads = require("../src/jsmonads.js");
+    var pc = require("../src/parcomb.js").stringParser;
+    var parser = require("../src/parser.js");
+
+    var d = pc.digit();
+    var u = pc.upper();
+    var l = pc.lower();
+    //var p = pc.choice(pc.choice(d,u),l);
+    var p = pc.or(d,u,l);
+    checkFirstResult(test, parser, p("123"), "1", "23");
+    checkFirstResult(test, parser, p("ABC"), "A", "BC");
+    checkFirstResult(test, parser, p("abc"), "a", "bc");
+    test.ok(!parser.caseReply(p("!abc"), rt, rf));
+    test.done();
+};
+
+
+/*
 
 exports.testMany = function(test) {
     var monads = require("../src/jsmonads.js");
@@ -154,25 +195,6 @@ exports.testBetween = function(test) {
     test.ok(r.length === 0);
 
     r = p("(abc");
-    test.ok(r.length === 0);
-
-    test.done();
-};
-exports.testOr = function(test) {
-    var monads = require("../src/jsmonads.js");
-    var pc = require("../src/parcomb.js").stringParser;
-
-    var p = pc.or(pc.many1(pc.digit()), pc.many1(pc.upper()));
-    var r = p("123");
-    checkFirstResult(test,r,"123","");
-    
-    r = p("ABC");
-    checkFirstResult(test,r,"ABC","");
-
-    r = p("A1B2");
-    checkFirstResult(test,r,"A","1B2");
-
-    r = p("aBC123");
     test.ok(r.length === 0);
 
     test.done();

@@ -10,6 +10,7 @@ module.exports = (function() {
     var consumed = parser.consumed;
     var lzError = parser.lzError;
     var lzConsumed = parser.lzConsumed;
+    var match = parser.match;
 
     if (String.prototype.tokenAt === undefined) {
         String.prototype.tokenAt = String.prototype.charAt;
@@ -157,18 +158,33 @@ module.exports = (function() {
             return parser.mplus(sepBy1(p, sep), parser.pure(identity));
         };
 
-        var or = function(/* ordered list of parsers */) {
-            var orargs = arguments;
+        var choice = function(p,q) {
             return function(inp) {
-                var r;
-                for (var i=0,n=orargs.length;i<n;i++) {
-                    r = orargs[i].call(null, inp);
-                    if (r.length !== 0) {
-                        return r;
-                    }
-                }
-                return [];
+                var r = p.call(null, inp);
+                return match(r, {
+                    emptyError: function() { return q.call(null, inp); }, // if p failed, try q
+                    emptyOk: function(reply) { // if p succeeds without consuming input, q is favored if it does consume input (longest match rule)
+                        var r2 = q.call(null, inp);
+                        return caseConsumed(r2, 
+                            function onEmpty() {
+                                return empty(reply);
+                            },
+                            function onConsumed() {
+                                return r2;
+                            });
+                        },
+                    consumedError: function() { return r; }, // if p consumes data it is chosen
+                    consumedOk: function() { return r; } // if p consumes data it is chosen
+                });
             };
+        };
+
+        var or = function(/* ordered list of parsers */) {
+            var orargs = Array.prototype.slice.call(arguments,0);
+            return orargs.reduce(choice);
+            //return function(inp) {
+                //return orargs.reduce(choice);
+            //};
         };
 
         // chainl1 p op - returns a parser that parses one or more occurrences of p, separated by op 
@@ -255,6 +271,7 @@ module.exports = (function() {
                 chainl1:chainl1,
                 stringP:stringP,
                 or:or,
+                choice:choice,
                 whitespace:whitespace,
                 parse:parse,
                 token:token,
