@@ -5,6 +5,8 @@ module.exports = (function() {
     var parser = monads.parser;
     //var parser = monads.stateM.withMonad(monads.list);
     var empty = parser.empty;
+    var message = parser.message;
+    var state = parser.state;
     var ok = parser.ok;
     var error = parser.error;
     var consumed = parser.consumed;
@@ -47,6 +49,15 @@ module.exports = (function() {
         return r;
     };
 
+    var nextPos = function(pos, c) {
+        // TODO: tab support
+        if (c === "\n") {
+            return {line: pos.line + 1, col: 1};
+        } else {
+            return {line: pos.line, col: pos.col + 1};
+        };
+    };
+
 
     // This determines if we are going to aggregate as a list or as a string
     // since in JS a string is not a list of characters, we have separate identity values for the concatenation operation
@@ -55,33 +66,21 @@ module.exports = (function() {
     // otherwise use [] (for actual numbers, functions, objects, etc that are stored in an array)
     var withIdentity = function(identity) {
 
-
-        /* Unconditionally consume 1 character */
-        //var item = function() {
-            //var tail = function(inp) { return inp.rest(); };
-//
-            //return parser.bind(parser.update(tail),
-                //function(ss) {
-                    //if (ss.length === 0) {
-                        //return parser.mzero();
-                    //} else{
-                        //return parser.pure(ss.tokenAt(0));
-                    //}
-                //});
-//
-        //};
-
         var satisfies = function(pred) {
-            return function(inp) {
-                var next, rest;
-
-                if (inp.length === 0) {
-                    return empty(error());
+            return function(s) {
+                if (s.input.length === 0) {
+                    return empty(error(message(s.pos, "End of input", [])));
                 } else {
-                    next = inp.tokenAt(0);
-                    return pred.call(null, next) ? 
-                                consumed(ok(next, inp.rest())) : 
-                                empty(error());
+                    var next;
+                    next = s.input.tokenAt(0);
+                    if (pred.call(null, next)) {
+                        var newPos = nextPos(s.pos, next);
+                        var newState = state(s.input.rest(), newPos);
+                        // TODO: eval to prevent space leak
+                        return consumed(ok(next, newState, message(s.pos, "", [])));
+                    } else {
+                        return empty(error(message(s.pos, next, [])));
+                    }
                 }
             };
         };
