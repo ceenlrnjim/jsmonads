@@ -132,22 +132,22 @@ exports.testMany1 = function(test) {
 };
 
 
-/*
 
 
 exports.testMany = function(test) {
     var monads = require("../src/jsmonads.js");
     var pc = require("../src/parcomb.js").stringParser;
     var parser = monads.parser;
+    var ns = function(input) { return parser.state(input, parser.position(1,1)); };
 
     var p = pc.many(pc.digit());
-    var r = p("123abc456");
+    var r = p(ns("123abc456"));
     checkFirstResult(test, parser, r, "123", "abc456");
 
-    r = p("1abc");
+    r = p(ns("1abc"));
     checkFirstResult(test,parser, r,"1","abc");
 
-    r = p("abc123");
+    r = p(ns("abc123"));
     checkFirstResult(test,parser, r,"","abc123");
 
     test.done();
@@ -157,20 +157,21 @@ exports.testTry = function(test) {
     var monads = require("../src/jsmonads.js");
     var pc = require("../src/parcomb.js").stringParser;
     var parser = monads.parser;
+    var ns = function(input) { return parser.state(input, parser.position(1,1)); };
 
     var p = pc.choice(pc.pdo([pc.digit, pc.digit, pc.digit], function(a,b,c) { return a+b+c; }), 
                   pc.pdo([pc.digit, pc.digit, pc.lower], function(a,b,c) { return a+b+c; }));
-    var r = p("123abc");
+    var r = p(ns("123abc"));
     checkFirstResult(test,parser,r,"123","abc");
-    r = p("12abc");
+    r = p(ns("12abc"));
     test.ok(!parser.caseReply(r, rt, rf));
 
     var p2 = pc.choice(pc.tryP(pc.pdo([pc.digit, pc.digit, pc.digit], function(a,b,c) { return a+b+c; })), 
                   pc.pdo([pc.digit, pc.digit, pc.lower], function(a,b,c) { return a+b+c; }));
 
-    r = p2("123abc");
+    r = p2(ns("123abc"));
     checkFirstResult(test,parser,r,"123","abc");
-    r = p2("12abc");
+    r = p2(ns("12abc"));
     checkFirstResult(test,parser,r,"12a","bc");
 
     return test.done();
@@ -181,15 +182,16 @@ exports.testSepBy1 = function(test) {
     var monads = require("../src/jsmonads.js");
     var pc = require("../src/parcomb.js").stringParser;
     var parser = monads.parser;
+    var ns = function(input) { return parser.state(input, parser.position(1,1)); };
 
     var p = pc.sepBy1(pc.digit(), pc.charP(","));
-    var r = p("1,2,3,4");
+    var r = p(ns("1,2,3,4"));
     checkFirstResult(test,parser,r,"1234","");
 
-    r = p("1,2a");
+    r = p(ns("1,2a"));
     checkFirstResult(test,parser,r,"12","a");
 
-    r = p("Abcde");
+    r = p(ns("Abcde"));
     test.ok(!parser.caseReply(r, rt, rf));
 
     test.done();
@@ -198,15 +200,16 @@ exports.testSepBy = function(test) {
     var monads = require("../src/jsmonads.js");
     var pc = require("../src/parcomb.js").stringParser;
     var parser = monads.parser;
+    var ns = function(input) { return parser.state(input, parser.position(1,1)); };
 
     var p = pc.sepBy(pc.digit(), pc.charP(","));
-    var r = p("1,2,3,4");
+    var r = p(ns("1,2,3,4"));
     checkFirstResult(test,parser,r,"1234","");
 
-    r = p("1,2abc");
+    r = p(ns("1,2abc"));
     checkFirstResult(test,parser,r,"12","abc");
 
-    r = p("Abcde");
+    r = p(ns("Abcde"));
     checkFirstResult(test,parser,r,"","Abcde");
 
     test.done();
@@ -216,15 +219,16 @@ exports.testBetween = function(test) {
     var monads = require("../src/jsmonads.js");
     var pc = require("../src/parcomb.js").stringParser;
     var parser = monads.parser;
+    var ns = function(input) { return parser.state(input, parser.position(1,1)); };
 
     var p = pc.between(pc.charP("("), pc.many(pc.lower()), pc.charP(")"));
-    var r = p("(abcde)456");
+    var r = p(ns("(abcde)456"));
     checkFirstResult(test,parser,r,"abcde","456");
 
-    r = p("(abc45)");
+    r = p(ns("(abc45)"));
     test.ok(!parser.caseReply(r, rt, rf));
 
-    r = p("(abc");
+    r = p(ns("(abc"));
     test.ok(!parser.caseReply(r, rt, rf));
 
     test.done();
@@ -235,6 +239,7 @@ exports.testChainl1 = function(test) {
     var pcs = require("../src/parcomb.js").stringParser;
     var pca = require("../src/parcomb.js").arrayParser;
     var parser = monads.parser;
+    var ns = function(input) { return parser.state(input, parser.position(1,1)); };
 
     var op = parser.bind(pca.charP("+"), function(plus) {
         return parser.pure(function(a,b) { return a + b; });
@@ -245,7 +250,7 @@ exports.testChainl1 = function(test) {
     });
 
     var p = pca.chainl1(num, op);
-    var r = p("1+2+3");
+    var r = p(ns("1+2+3"));
     checkFirstResult(test,parser,r,6,"");
 
     test.done();
@@ -254,8 +259,9 @@ exports.testWhitespace = function(test) {
     var monads = require("../src/jsmonads.js");
     var pc = require("../src/parcomb.js").stringParser;
     var parser = monads.parser;
+    var ns = function(input) { return parser.state(input, parser.position(1,1)); };
 
-    checkFirstResult(test,parser, pc.whitespace()(" \t  \nabc"), "", "abc");
+    checkFirstResult(test,parser, pc.whitespace()(ns(" \t  \nabc")), "", "abc");
 
     test.done();
 };
@@ -264,9 +270,10 @@ exports.testParse = function(test) {
     var monads = require("../src/jsmonads.js");
     var pc = require("../src/parcomb.js").stringParser;
     var parser = monads.parser;
+    var ns = function(input) { return parser.state(input, parser.position(1,1)); };
 
     var p = pc.parse(pc.whitespace(), pc.many1(pc.digit()));
-    checkFirstResult(test,parser, p("  123Jim"), "123", "Jim");
+    checkFirstResult(test,parser, p(ns("  123Jim")), "123", "Jim");
 
     test.done();
 };
@@ -275,11 +282,11 @@ exports.testToken = function(test) {
     var monads = require("../src/jsmonads.js");
     var pc = require("../src/parcomb.js").stringParser;
     var parser = monads.parser;
+    var ns = function(input) { return parser.state(input, parser.position(1,1)); };
 
     var p = pc.token(pc.whitespace(), pc.many1(pc.letter()));
-    checkFirstResult(test,parser, p("Jim\n"), "Jim", "");
+    checkFirstResult(test,parser, p(ns("Jim\n")), "Jim", "");
 
     test.done();
 
 };
-*/

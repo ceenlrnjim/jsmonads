@@ -35,6 +35,9 @@ module.exports = (function() {
     };
 
     var _ok = function(v, state, msg) {
+        if (!state.type || state.type !== stateTypeId) {
+            throw new TypeError("cannont construct ok with non-state");
+        };
         return { type: okTypeId, result: v, state: state, msg: msg };
     };
 
