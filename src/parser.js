@@ -45,25 +45,24 @@ module.exports = (function() {
         return c.type === emptyTypeId ? onEmpty.call(null, c.replyFn.call(null)) : onConsumed.call(null, c.replyFn.call(null));
     };
 
-    // TODO: add undefined checks
     var _match = function(r, fns) {
         return _caseConsumed(r,
             function onEmpty(reply) {
                 return _caseReply(reply,
                     function onOk(x,rest) {
-                        return fns.emptyOk.call(null,x,rest);
+                        return fns.emptyOk ? fns.emptyOk.call(null,x,rest) : fns.otherwise.call(null, r); // need to validate we always want r and never reply here
                     },
                     function onError() {
-                        return fns.emptyError.call(null, reply);
+                        return fns.emptyError ? fns.emptyError.call(null, reply) : fns.otherwise.call(null, r);
                     });
             },
             function onConsumed(reply) {
                 return _caseReply(reply,
                     function onOk(x,rest) {
-                        return fns.consumedOk.call(null, x, rest);
+                        return fns.consumedOk ? fns.consumedOk.call(null,x,rest) : fns.otherwise.call(null, r);
                     },
                     function onError() {
-                        return fns.consumedError.call(null, reply);
+                        return fns.consumedError ? fns.consumedError.call(null, reply) : fns.otherwise.call(null, r);
                     });
             });
     };
@@ -98,60 +97,38 @@ module.exports = (function() {
                 consumedError: function(reply) {
                     return _consumed(reply);
                 }});
-                            
-
-
-            /*
-            return _caseConsumed(ma.call(null, inp),
-                        function empty(reply) {
-                            return _caseReply(reply,
-                                // Empty Ok
-                                function ok(x,rest) {
-                                    //console.log("Empty OK " + x + " " + rest);
-                                    return f.call(null, x).call(null, rest);
-                                },
-                                // Empty Error
-                                function error() {
-                                    //console.log("Empty Error");
-                                    return _empty(error());
-                                });
-                        },
-                        function consumed(reply) {
-                            return _lzConsumed(
-                                // need Lazy evaluation
-                                function() {
-                                    return _caseReply(reply,
-                                    // Consumed Ok
-                                    function ok(x, rest) {
-                                        return _caseConsumed(f.call(null, x).call(null, rest),
-                                            function subempty(reply2) {
-                                                //console.log("Consumed OK " + x + " " + rest);
-                                                return reply2;
-                                            },
-                                            function subconsumed(reply2) {
-                                                //console.log("Consumed Error");
-                                                return reply2;
-                                            });
-                                    },
-                                    // Consumed Error
-                                    function error() {
-                                        return reply;                       
-                                    })
-                                });
-                        });
-                        */
         };
+    };
+
+    var _sequence = function(ma, f) {
+        return _bind(ma, function(unused) {
+            return f.call(null);
+        });
     };
 
     var _mzero = function() { 
         return function(inp) { 
-            return []; 
+            return empty(error());
         }; 
     };
 
+    // for this parser, mplus is the choice operator
     var _mplus = function(p, q) { 
         return function(inp) {
-            return p.call(null,inp).concat(q.call(null,inp));
+            var r = p.call(null, inp);
+            return _match(r, {
+                // if p failed, try q
+                emptyError: function() { return q.call(null, inp); },
+                // if p succeeds without consuming input, q is favored if it does consume input (longest match rule)
+                emptyOk: function(reply) { 
+                    return _caseConsumed(q.call(null, inp),
+                        function onEmpty() { return empty(reply); },
+                        function onConsumed(r2) { return r2; });
+                    },
+                // if p consumes data it is chosen
+                consumedError: function() { return r; },
+                consumedOk: function() { return r; }
+            });
         };
     };
 
@@ -168,7 +145,7 @@ module.exports = (function() {
         return s;
     };
 
-    return { pure: _pure, bind: _bind, mplus:_mplus, mzero: _mzero, empty:_empty, ok:_ok, error:_error, consumed: _consumed, caseReply: _caseReply, caseConsumed: _caseConsumed, lzConsumed: _lzConsumed, lzEmpty: _lzEmpty, match:_match };
+    return { pure: _pure, bind: _bind, mplus:_mplus, mzero: _mzero, empty:_empty, ok:_ok, error:_error, consumed: _consumed, caseReply: _caseReply, caseConsumed: _caseConsumed, lzConsumed: _lzConsumed, lzEmpty: _lzEmpty, match:_match, sequence:_sequence };
 })();
 
 

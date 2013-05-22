@@ -2,15 +2,15 @@ var rt = function() { return true; };
 var rf = function() { return false; };
 var checkFirstResult = function(test, parser, r, val, state) {
 
-    var av,as;
+    var av,as,mt;
     var matches = parser.match(r, {
-        emptyOk: function(x,rest) { av=x; as=rest; return x === val && rest === state; },
-        emptyError: function() { return false; },
-        consumedOk: function(x,rest) { av=x; as=rest; return x === val && rest === state; },
-        consumedError: function() { return false; }});
+        emptyOk: function(x,rest) { mt="emptyOk"; av=x; as=rest; return x === val && rest === state; },
+        emptyError: function() { mt="emptyError"; return false; },
+        consumedOk: function(x,rest) { mt="consumedOk"; av=x; as=rest; return x === val && rest === state; },
+        consumedError: function() { mt="consumedError"; return false; }});
         
     
-    test.ok(matches, "value: expected " + val + "," + state + " got " + av + "," + as);
+    test.ok(matches, "value: [" + mt + "] expected " + val + "," + state + " got " + av + "," + as);
 };
 
 /*
@@ -107,61 +107,86 @@ exports.testOr = function(test) {
     test.done();
 };
 
+exports.testMany1 = function(test) {
+    var monads = require("../src/jsmonads.js");
+    var pc = require("../src/parcomb.js").stringParser;
+    var parser = monads.parser;
+    
+    var p = pc.many1(pc.lower());
+    var r = p("abc123");
+    console.log(r.replyFn());
+    checkFirstResult(test,parser, r,"abc","123");
 
-/*
+    r = p("123abc");
+    test.ok(!parser.caseReply(r, rt, rf));
+
+    test.done();
+};
+
+
+
 
 exports.testMany = function(test) {
     var monads = require("../src/jsmonads.js");
     var pc = require("../src/parcomb.js").stringParser;
+    var parser = monads.parser;
 
     var p = pc.many(pc.digit());
     var r = p("123abc456");
-    checkFirstResult(test, r, "123", "abc456");
+    checkFirstResult(test, parser, r, "123", "abc456");
 
     r = p("1abc");
-    checkFirstResult(test,r,"1","abc");
+    checkFirstResult(test,parser, r,"1","abc");
 
     r = p("abc123");
-    checkFirstResult(test,r,"","abc123");
+    checkFirstResult(test,parser, r,"","abc123");
 
     test.done();
 };
 
-exports.testMany1 = function(test) {
+exports.testTry = function(test) {
     var monads = require("../src/jsmonads.js");
     var pc = require("../src/parcomb.js").stringParser;
-    
-    var p = pc.many1(pc.lower());
-    var r = p("abc123");
-    checkFirstResult(test,r,"abc","123");
+    var parser = monads.parser;
 
-    r = p("123abc");
-    test.ok(r.length === 0);
+    var p = pc.choice(pc.pdo([pc.digit, pc.digit, pc.digit], function(a,b,c) { return a+b+c; }), 
+                  pc.pdo([pc.digit, pc.digit, pc.lower], function(a,b,c) { return a+b+c; }));
+    var r = p("123abc");
+    checkFirstResult(test,parser,r,"123","abc");
+    r = p("12abc");
+    test.ok(!parser.caseReply(r, rt, rf));
 
-    test.done();
+    var p2 = pc.choice(pc.tryP(pc.pdo([pc.digit, pc.digit, pc.digit], function(a,b,c) { return a+b+c; })), 
+                  pc.pdo([pc.digit, pc.digit, pc.lower], function(a,b,c) { return a+b+c; }));
+
+    r = p2("123abc");
+    checkFirstResult(test,parser,r,"123","abc");
+    r = p2("12abc");
+    checkFirstResult(test,parser,r,"12a","bc");
+
+    return test.done();
 };
+
 
 exports.testSepBy1 = function(test) {
     var monads = require("../src/jsmonads.js");
-    var pc = require("../src/parcomb.js").arrayParser;
+    var pc = require("../src/parcomb.js").stringParser;
+    var parser = monads.parser;
 
     var p = pc.sepBy1(pc.digit(), pc.charP(","));
     var r = p("1,2,3,4");
+    checkFirstResult(test,parser,r,"1234","");
 
-    test.ok(r[0][0][0] === "1");
-    test.ok(r[0][0][1] === "2");
-    test.ok(r[0][0][2] === "3");
-    test.ok(r[0][0][3] === "4");
-    test.ok(r[0][1] === "");
-
-    r = p("1,2,abc");
-    test.ok(r[0][1] === ",abc");
+    r = p("1,2a");
+    console.log(r.replyFn());
+    checkFirstResult(test,parser,r,"12","a");
 
     r = p("Abcde");
-    test.ok(r.length === 0);
+    test.ok(!parser.caseReply(r, rt, rf));
 
     test.done();
 };
+/*
 exports.testSepBy = function(test) {
     var monads = require("../src/jsmonads.js");
     var pc = require("../src/parcomb.js").stringParser;

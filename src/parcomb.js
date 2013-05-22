@@ -57,19 +57,19 @@ module.exports = (function() {
 
 
         /* Unconditionally consume 1 character */
-        var item = function() {
-            var tail = function(inp) { return inp.rest(); };
-
-            return parser.bind(parser.update(tail),
-                function(ss) {
-                    if (ss.length === 0) {
-                        return parser.mzero();
-                    } else{
-                        return parser.pure(ss.tokenAt(0));
-                    }
-                });
-
-        };
+        //var item = function() {
+            //var tail = function(inp) { return inp.rest(); };
+//
+            //return parser.bind(parser.update(tail),
+                //function(ss) {
+                    //if (ss.length === 0) {
+                        //return parser.mzero();
+                    //} else{
+                        //return parser.pure(ss.tokenAt(0));
+                    //}
+                //});
+//
+        //};
 
         var satisfies = function(pred) {
             return function(inp) {
@@ -122,6 +122,15 @@ module.exports = (function() {
                             });
         };
 
+        var many1 = function(p) {
+            var pwrap = function() { return p; };
+            var many1wrap = function() { return choice(many1(p), parser.pure(identity)); };
+            return _pdo([pwrap, many1wrap], 
+                function(x,xs) { 
+                    return cons(x,xs);
+                });
+        };
+
         var many = function(p) {
             var pwrap = function() { return p; };
             var manywrap = function() { return many(p); };
@@ -131,18 +140,18 @@ module.exports = (function() {
                 
         };
 
-        var many1 = function(p) {
-            var pwrap = function() { return p; };
-            var manywrap = function() { return many(p); };// intentionally use many not recurse to many1
-            return _pdo([pwrap, manywrap], function(x,xs) { return cons(x,xs); });
-        };
-
         var sepBy1 = function(p, separator) {
-            var pwrapper = function() { return p; };
-            var sepwrapper = function() { return separator; };
-            var yparser = _pdo([sepwrapper, pwrapper], function(unused, y) { return y; });
-            var xsparser = function() { return many(yparser); };
-            return _pdo([pwrapper, xsparser], function(x,xs) { return cons(x,xs); });
+            //var pwrapper = function() { return p; };
+            //var sepwrapper = function() { return separator; };
+            //var yparser = _pdo([sepwrapper, pwrapper], function(unused, y) { return y; });
+            //var xsparser = function() { return many(yparser); };
+            //return _pdo([pwrapper, xsparser], function(x,xs) { return cons(x,xs); });
+
+            var pw = function() { return p; };
+            var sepw = function() { return separator; };
+            var sepAndP = _pdo([sepw, pw], function(unused, v) { return v; });
+            var xsw = function() { return many(sepAndP); };
+            return _pdo([pw, xsw], function(x,xs) { return cons(x,xs); });
         };
 
         var between = function(open, p, close) {
@@ -158,33 +167,19 @@ module.exports = (function() {
             return parser.mplus(sepBy1(p, sep), parser.pure(identity));
         };
 
-        var choice = function(p,q) {
-            return function(inp) {
-                var r = p.call(null, inp);
-                return match(r, {
-                    emptyError: function() { return q.call(null, inp); }, // if p failed, try q
-                    emptyOk: function(reply) { // if p succeeds without consuming input, q is favored if it does consume input (longest match rule)
-                        var r2 = q.call(null, inp);
-                        return caseConsumed(r2, 
-                            function onEmpty() {
-                                return empty(reply);
-                            },
-                            function onConsumed() {
-                                return r2;
-                            });
-                        },
-                    consumedError: function() { return r; }, // if p consumes data it is chosen
-                    consumedOk: function() { return r; } // if p consumes data it is chosen
-                });
-            };
-        };
+        var choice = parser.mplus;
 
         var or = function(/* ordered list of parsers */) {
             var orargs = Array.prototype.slice.call(arguments,0);
             return orargs.reduce(choice);
-            //return function(inp) {
-                //return orargs.reduce(choice);
-            //};
+        };
+
+        var tryP = function(p) {
+            return function(inp) {
+                return match(p.call(null, inp), {
+                    consumedError: function(reply) { return empty(error()); },
+                    otherwise: function(result) { return result; } });
+            };
         };
 
         // chainl1 p op - returns a parser that parses one or more occurrences of p, separated by op 
@@ -255,7 +250,7 @@ module.exports = (function() {
             return _pdoInternal([], 0);
         };
 
-        return {item:item,
+        return {//item:item,
                 satisfies:satisfies,
                 letter:letter,
                 alphanum:alphanum,
@@ -275,6 +270,7 @@ module.exports = (function() {
                 whitespace:whitespace,
                 parse:parse,
                 token:token,
+                tryP:tryP,
                 pdo:_pdo};
     };
 
