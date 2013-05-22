@@ -178,7 +178,6 @@ exports.testSepBy1 = function(test) {
     checkFirstResult(test,parser,r,"1234","");
 
     r = p("1,2a");
-    console.log(r.replyFn());
     checkFirstResult(test,parser,r,"12","a");
 
     r = p("Abcde");
@@ -186,24 +185,20 @@ exports.testSepBy1 = function(test) {
 
     test.done();
 };
-/*
 exports.testSepBy = function(test) {
     var monads = require("../src/jsmonads.js");
     var pc = require("../src/parcomb.js").stringParser;
+    var parser = monads.parser;
 
     var p = pc.sepBy(pc.digit(), pc.charP(","));
     var r = p("1,2,3,4");
+    checkFirstResult(test,parser,r,"1234","");
 
-    test.ok(r[0][0] === "1234");
-    test.ok(r[0][1] === "");
-
-    r = p("1,2,abc");
-    test.ok(r[0][0] === "12");
-    test.ok(r[0][1] === ",abc");
+    r = p("1,2abc");
+    checkFirstResult(test,parser,r,"12","abc");
 
     r = p("Abcde");
-    test.ok(r[0][0] === "");
-    test.ok(r[0][1] === "Abcde");
+    checkFirstResult(test,parser,r,"","Abcde");
 
     test.done();
 
@@ -211,19 +206,21 @@ exports.testSepBy = function(test) {
 exports.testBetween = function(test) {
     var monads = require("../src/jsmonads.js");
     var pc = require("../src/parcomb.js").stringParser;
+    var parser = monads.parser;
 
     var p = pc.between(pc.charP("("), pc.many(pc.lower()), pc.charP(")"));
     var r = p("(abcde)456");
-    checkFirstResult(test,r,"abcde","456");
+    checkFirstResult(test,parser,r,"abcde","456");
 
     r = p("(abc45)");
-    test.ok(r.length === 0);
+    test.ok(!parser.caseReply(r, rt, rf));
 
     r = p("(abc");
-    test.ok(r.length === 0);
+    test.ok(!parser.caseReply(r, rt, rf));
 
     test.done();
 };
+/*
 
 exports.testChainl1 = function(test) {
     var monads = require("../src/jsmonads.js");
