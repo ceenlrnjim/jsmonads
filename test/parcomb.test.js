@@ -220,7 +220,6 @@ exports.testBetween = function(test) {
 
     test.done();
 };
-/*
 
 exports.testChainl1 = function(test) {
     var monads = require("../src/jsmonads.js");
@@ -238,8 +237,39 @@ exports.testChainl1 = function(test) {
 
     var p = pca.chainl1(num, op);
     var r = p("1+2+3");
-    checkFirstResult(test,r,6,"");
+    checkFirstResult(test,parser,r,6,"");
 
     test.done();
 };
-*/
+exports.testWhitespace = function(test) {
+    var monads = require("../src/jsmonads.js");
+    var pc = require("../src/parcomb.js").stringParser;
+    var parser = monads.parser;
+
+    checkFirstResult(test,parser, pc.whitespace()(" \t  \nabc"), "", "abc");
+
+    test.done();
+};
+
+exports.testParse = function(test) {
+    var monads = require("../src/jsmonads.js");
+    var pc = require("../src/parcomb.js").stringParser;
+    var parser = monads.parser;
+
+    var p = pc.parse(pc.whitespace(), pc.many1(pc.digit()));
+    checkFirstResult(test,parser, p("  123Jim"), "123", "Jim");
+
+    test.done();
+};
+
+exports.testToken = function(test) {
+    var monads = require("../src/jsmonads.js");
+    var pc = require("../src/parcomb.js").stringParser;
+    var parser = monads.parser;
+
+    var p = pc.token(pc.whitespace(), pc.many1(pc.letter()));
+    checkFirstResult(test,parser, p("Jim\n"), "Jim", "");
+
+    test.done();
+
+};
