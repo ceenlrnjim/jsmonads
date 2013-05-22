@@ -140,12 +140,6 @@ module.exports = (function() {
         };
 
         var sepBy1 = function(p, separator) {
-            //var pwrapper = function() { return p; };
-            //var sepwrapper = function() { return separator; };
-            //var yparser = _pdo([sepwrapper, pwrapper], function(unused, y) { return y; });
-            //var xsparser = function() { return many(yparser); };
-            //return _pdo([pwrapper, xsparser], function(x,xs) { return cons(x,xs); });
-
             var pw = function() { return p; };
             var sepw = function() { return separator; };
             var sepAndP = _pdo([sepw, pw], function(unused, v) { return v; });
