@@ -10,10 +10,12 @@ module.exports = (function() {
     var errorTypeId = {name:"Error"};
     var okTypeId = {name:"Ok"};
 
+    // the reply is wrapped in a no-arg function to make its evaluation lazy
     var _lzEmpty = function(replyFn) {
         return {type: emptyTypeId, replyFn:replyFn};
     };
 
+    // the reply is wrapped in a no-arg function to make its evaluation lazy
     var _lzConsumed = function(replyFn) {
         return {type: consumedTypeId, replyFn:replyFn};
     };
@@ -74,9 +76,7 @@ module.exports = (function() {
     };
 
 
-    // TODO: There are going to be problems here without laziness - may need to manually add it back
-    // lots of "Due to laziness...This 'early' returning is essential for the efficient behavior of the choice
-    // combinator"
+    // "Due to laziness...This 'early' returning is essential for the efficient behavior of the choice combinator"
     var _bind = function(ma, f) {
         return function(inp) {
             return _match(ma.call(null,inp), {
