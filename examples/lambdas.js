@@ -9,7 +9,7 @@ var parser = monads.parser;
 // 
 var Expr = {};
 var App = function(f,v) {
-    console.log("Constructing App " + f + "," + v);
+    console.log("Constructing App " + f.name + "," + v.name);
     this.fn = f;
     this.val = v;
 };
@@ -131,4 +131,4 @@ lazyexpr = function(inp) {
 //console.log(pca.between(symbol("("), aVar, symbol(")"))("( a ) "));
 //console.log(pc.between(symbol("("), pc.many(pc.letter()), symbol(")"))("(a)"));
 //console.log(lam("\\x -> x"));
-console.log(paren("(b c)"));
+console.log(paren("(b c (d e f))"));
