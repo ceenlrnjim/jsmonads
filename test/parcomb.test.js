@@ -1,3 +1,8 @@
+var monads = require("../src/jsmonads.js");
+var pc = require("../src/parcomb.js").stringParser;
+var parser = monads.parser;
+var ns = function(input) { return parser.state(input, parser.position(1,1)); };
+
 var rt = function() { return true; };
 var rf = function() { return false; };
 var checkFirstResult = function(test, parser, r, val, state) {
@@ -34,11 +39,6 @@ exports.testItem = function(test) {
 */
 
 exports.testSatisfies = function(test) {
-    var monads = require("../src/jsmonads.js");
-    var pc = require("../src/parcomb.js").stringParser;
-    var parser = require("../src/parser.js");
-    var ns = function(input) { return parser.state(input, parser.position(1,1)); };
-
     var p = pc.satisfies(function(c) { return c === '1' || c === '2' || c === '3'; });
     var r = p.call(null, ns("111"))
     checkFirstResult(test, parser, r, "1", "11");
@@ -53,11 +53,6 @@ exports.testSatisfies = function(test) {
 };
 
 exports.testCharP = function(test) {
-    var monads = require("../src/jsmonads.js");
-    var pc = require("../src/parcomb.js").stringParser;
-    var parser = require("../src/parser.js");
-    var ns = function(input) { return parser.state(input, parser.position(1,1)); };
-
     var r = pc.charP("J")(ns("Jim"));
     checkFirstResult(test, parser,r,"J","im");
 
@@ -68,11 +63,6 @@ exports.testCharP = function(test) {
 };
 
 exports.testStringP = function(test) {
-    var monads = require("../src/jsmonads.js");
-    var pc = require("../src/parcomb.js").stringParser;
-    var parser = require("../src/parser.js");
-    var ns = function(input) { return parser.state(input, parser.position(1,1)); };
-
     var r = pc.stringP("Jim")(ns("Jim Kirkwood"));
     checkFirstResult(test, parser,r,"Jim", " Kirkwood");
 
@@ -216,11 +206,6 @@ exports.testSepBy = function(test) {
 
 };
 exports.testBetween = function(test) {
-    var monads = require("../src/jsmonads.js");
-    var pc = require("../src/parcomb.js").stringParser;
-    var parser = monads.parser;
-    var ns = function(input) { return parser.state(input, parser.position(1,1)); };
-
     var p = pc.between(pc.charP("("), pc.many(pc.lower()), pc.charP(")"));
     var r = p(ns("(abcde)456"));
     checkFirstResult(test,parser,r,"abcde","456");
@@ -235,10 +220,8 @@ exports.testBetween = function(test) {
 };
 
 exports.testChainl1 = function(test) {
-    var monads = require("../src/jsmonads.js");
     var pcs = require("../src/parcomb.js").stringParser;
     var pca = require("../src/parcomb.js").arrayParser;
-    var parser = monads.parser;
     var ns = function(input) { return parser.state(input, parser.position(1,1)); };
 
     var op = parser.bind(pca.charP("+"), function(plus) {
@@ -256,22 +239,12 @@ exports.testChainl1 = function(test) {
     test.done();
 };
 exports.testWhitespace = function(test) {
-    var monads = require("../src/jsmonads.js");
-    var pc = require("../src/parcomb.js").stringParser;
-    var parser = monads.parser;
-    var ns = function(input) { return parser.state(input, parser.position(1,1)); };
-
     checkFirstResult(test,parser, pc.whitespace()(ns(" \t  \nabc")), "", "abc");
 
     test.done();
 };
 
 exports.testParse = function(test) {
-    var monads = require("../src/jsmonads.js");
-    var pc = require("../src/parcomb.js").stringParser;
-    var parser = monads.parser;
-    var ns = function(input) { return parser.state(input, parser.position(1,1)); };
-
     var p = pc.parse(pc.whitespace(), pc.many1(pc.digit()));
     checkFirstResult(test,parser, p(ns("  123Jim")), "123", "Jim");
 
@@ -279,14 +252,17 @@ exports.testParse = function(test) {
 };
 
 exports.testToken = function(test) {
-    var monads = require("../src/jsmonads.js");
-    var pc = require("../src/parcomb.js").stringParser;
-    var parser = monads.parser;
-    var ns = function(input) { return parser.state(input, parser.position(1,1)); };
-
     var p = pc.token(pc.whitespace(), pc.many1(pc.letter()));
     checkFirstResult(test,parser, p(ns("Jim\n")), "Jim", "");
 
     test.done();
 
+};
+
+exports.testLabel = function(test) {
+    var p = pc.label(pc.charP("J"), "Only J");
+    var r = p(ns("Bill")).replyFn();
+    test.ok(r.msg.expecteds[0] === "Only J");
+
+    test.done();
 };

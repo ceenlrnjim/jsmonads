@@ -93,31 +93,34 @@ module.exports = (function() {
         };
 
         var digit = function() {
-            return satisfies(function(c) { return c >= '0' && c <= '9'; });
+            return label(satisfies(function(c) { return c >= '0' && c <= '9'; }), "digit");
         };
 
         var lower = function() {
-            return satisfies(function(c) { return c >= 'a' && c <= 'z'; });
+            return label(satisfies(function(c) { return c >= 'a' && c <= 'z'; }), "lower");
         };
 
         var upper = function() {
-            return satisfies(function(c) { return c >= 'A' && c <= 'Z'; });
+            return label(satisfies(function(c) { return c >= 'A' && c <= 'Z'; }), "upper");
         };
 
         var letter = function() {
-            return parser.mplus(upper(), lower());
+            return label(parser.mplus(upper(), lower()), "letter");
         };
 
         var alphanum = function() {
-            return parser.mplus(letter(), digit());
+            return label(parser.mplus(letter(), digit()), "alpha-numeric");
         };
 
+        var stringP = function(s) {
+            return label(stringPinternal(s), "'" + s + "'");
+        };
 
         /* Parser that matches a specific string */
-        var stringP = function(s) {
+        var stringPinternal = function(s) {
             if (s.length === 0) return parser.pure(""); // always strings here
             else return mdo(parser, 
-                            [charP(s[0]), stringP(s.substring(1))], 
+                            [charP(s[0]), stringPinternal(s.substring(1))], 
                             function(x, xs) {
                                 return parser.pure(x.concat(xs)); // always strings here
                             });
@@ -226,6 +229,25 @@ module.exports = (function() {
             });
         };
 
+        var expect = function(msg, s) {
+            return message(msg.pos, msg.input, [s]);
+        };
+
+        var label = function(p,exp) {
+            return function(s) {
+                return match(p.call(null,s), {
+                    emptyError: function(errmsg) {
+                        return empty(error(expect(errmsg, exp)));
+                    },
+                    emptyOk: function(x,rest,reply) {
+                        return empty(ok(x,reply.state,expect(errmsg, exp)));
+                    },
+                    otherwise: function(result) {
+                        return result;
+                    }});
+            };
+        };
+
         // mdo doesn't work where monad values in the 'ms' list are recursive calls - JS not lazy enough? or am I doing something wrong
         // so here each monadic value in ms must be a no argument function that returns the monad to be processed
         // function won't be invoked until ready
@@ -266,6 +288,7 @@ module.exports = (function() {
                 parse:parse,
                 token:token,
                 tryP:tryP,
+                label:label,
                 pdo:_pdo};
     };
 
