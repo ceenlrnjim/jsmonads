@@ -89,7 +89,7 @@ module.exports = (function() {
 
         /* Parser that matches a specific character */
         var charP = function(c) {
-            return satisfies(function(v) { return v === c; });
+            return label(satisfies(function(v) { return v === c; }, "'" + c + "'"));
         };
 
         var digit = function() {
@@ -230,7 +230,7 @@ module.exports = (function() {
         };
 
         var expect = function(msg, s) {
-            return message(msg.pos, msg.input, [s]);
+            return message(msg.pos, msg.unexpected, [s]);
         };
 
         var label = function(p,exp) {

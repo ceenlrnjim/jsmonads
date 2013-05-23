@@ -66,8 +66,8 @@ module.exports = (function() {
     };
 
     // handles laziness of the consumed/empty constructors
-    var _caseConsumed = function(c, onEmpty, onConsumed) {
-        return c.type === emptyTypeId ? onEmpty.call(null, c.replyFn.call(null)) : onConsumed.call(null, c.replyFn.call(null));
+    var _caseConsumed = function(consumedOrEmpty, onEmpty, onConsumed) {
+        return consumedOrEmpty.type === emptyTypeId ? onEmpty.call(null, consumedOrEmpty.replyFn.call(null)) : onConsumed.call(null, consumedOrEmpty.replyFn.call(null));
     };
 
     var _match = function(r, fns) {
@@ -181,7 +181,26 @@ module.exports = (function() {
         };
     };
 
-    return { pure: _pure, bind: _bind, mplus:_mplus, mzero: _mzero, empty:_empty, ok:_ok, error:_error, consumed: _consumed, caseReply: _caseReply, caseConsumed: _caseConsumed, lzConsumed: _lzConsumed, lzEmpty: _lzEmpty, match:_match, sequence:_sequence, state:_state, message:_message, position:_position, isState: _isState };
+    var _run = function(p,input) {
+        var initial_state = _state(input, _position(1,1));
+        var okout = function(v, rest) {
+            console.log("Parser returned: " + v);
+            console.log(" - remaining input: " + rest);
+            return v;
+        };
+        var errout = function(errmsg) {
+            console.log("Parse error at (line "+ errmsg.pos.line + ", column " + errmsg.pos.col + ")");
+            console.log("unexpected '" + errmsg.unexpected + "'");
+            console.log("expecting " + errmsg.expecteds);
+            return errmsg;
+        };
+
+        return _match(p.call(null, initial_state), {
+            emptyError: errout,
+            emptyOk: okout,
+            consumedError: errout,
+            consumedOk: okout});
+    };
+
+    return { pure: _pure, bind: _bind, mplus:_mplus, mzero: _mzero, empty:_empty, ok:_ok, error:_error, consumed: _consumed, caseReply: _caseReply, caseConsumed: _caseConsumed, lzConsumed: _lzConsumed, lzEmpty: _lzEmpty, match:_match, sequence:_sequence, state:_state, message:_message, position:_position, isState: _isState, run:_run };
 })();
-
-
