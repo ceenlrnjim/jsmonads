@@ -68,7 +68,9 @@ module.exports = (function() {
 
         var satisfies = function(pred) {
             return function(s) {
-                if (s.input.length === 0) {
+                if (!parser.isState(s)) {
+                    throw new TypeError("Cannot parse without initial state");
+                } else if (s.input.length === 0) {
                     return empty(error(message(s.pos, "End of input", [])));
                 } else {
                     var next;

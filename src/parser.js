@@ -53,6 +53,10 @@ module.exports = (function() {
         return {type: stateTypeId, input:input, pos:pos};
     };
 
+    var _isState = function(s) {
+        return (s.type && s.type === stateTypeId);
+    };
+
     var _position = function(line,col) {
         return {line:line,col:col};
     };
@@ -102,10 +106,10 @@ module.exports = (function() {
                 emptyOk: function(x,rest,reply) { 
                     return f.call(null, x).call(null, reply.state); 
                 },
-                emptyError: function(reply) { 
-                    return _empty(_error(_message(s.pos,"",[]))); 
+                emptyError: function(errmsg) { 
+                    return _empty(_error(errmsg));
                 },
-                // TODO: lazy here is a bit different than original
+                // lazy here is a bit different than original
                 consumedOk: function(x,rest,reply) {
                     return _lzConsumed(
                         function() {
@@ -131,8 +135,10 @@ module.exports = (function() {
         }; 
     };
 
+    // " Notice that the positions of the error message passed to merge should always be the
+    //same. Since the choice combinator only calls merge when both alternatives have
+    //not consumed input, both positions are guaranteed to be equal."
     var _mergeOk = function(v, input, msg1, msg2) {
-        // TODO: which position should be used here?
         return _empty(_ok(v, _state(input, msg2.pos), _merge(msg1, msg2)));
     };
 
@@ -175,7 +181,7 @@ module.exports = (function() {
         };
     };
 
-    return { pure: _pure, bind: _bind, mplus:_mplus, mzero: _mzero, empty:_empty, ok:_ok, error:_error, consumed: _consumed, caseReply: _caseReply, caseConsumed: _caseConsumed, lzConsumed: _lzConsumed, lzEmpty: _lzEmpty, match:_match, sequence:_sequence, state:_state, message:_message, position:_position };
+    return { pure: _pure, bind: _bind, mplus:_mplus, mzero: _mzero, empty:_empty, ok:_ok, error:_error, consumed: _consumed, caseReply: _caseReply, caseConsumed: _caseConsumed, lzConsumed: _lzConsumed, lzEmpty: _lzEmpty, match:_match, sequence:_sequence, state:_state, message:_message, position:_position, isState: _isState };
 })();
 
 
