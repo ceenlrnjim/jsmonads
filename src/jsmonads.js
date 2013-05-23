@@ -4,6 +4,7 @@ module.exports =(function() {
     // here wrapper objects are "types" and the actual js objects are the value constructors
     var maybe = require("./maybe.js");
     var promise = require("./promise.js");
+    var promiseM = require("./promiseM.js");
     var either = require("./either.js");
     var writer = require("./writer.js");
     var list = require("./list.js");
@@ -88,6 +89,7 @@ module.exports =(function() {
              list:list, 
              maybe: maybe, 
              promise:promise, 
+             promiseM: promiseM,
              either:either, 
              writer:writer, 
              lift:_lift, 
