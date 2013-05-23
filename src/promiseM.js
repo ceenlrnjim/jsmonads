@@ -1,12 +1,8 @@
+// so a typical JS promise would be a promiseM.withMonad(either);
 module.exports = (function() {
     var _withMonad = function(monad) {
         var _pure = function(v) {
             return _lift(monad.pure(v));
-            //return function(cb) {
-                //setTimeout(function() {
-                    //cb.call(null, monad.pure(v));
-                //},0);
-            //};
         };
 
         var _bind = function(ma, f) {
@@ -21,11 +17,6 @@ module.exports = (function() {
 
         var _mzero = function() {
             return _lift(monad.mzero());
-            //return function(cb) {
-                //setTimeout(function() {
-                    //cb.call(null, monad.mzero());
-                //},0);
-            //};
         };
 
         var _mplus = function(ma,mb) {
