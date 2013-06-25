@@ -14,14 +14,14 @@ module.exports = (function() {
     var lzConsumed = parser.lzConsumed;
     var match = parser.match;
 
-    if (String.prototype.tokenAt === undefined) {
-        String.prototype.tokenAt = String.prototype.charAt;
+    if (String.prototype.first === undefined) {
+        String.prototype.first = String.prototype.charAt;
     }
     if (String.prototype.rest === undefined) {
         String.prototype.rest = function() { return this.substring(1); };
     }
-    if (Array.prototype.tokenAt === undefined) {
-        Array.prototype.tokenAt = function(i) { return this[i]; };
+    if (Array.prototype.first === undefined) {
+        Array.prototype.first = function(i) { return this[i]; };
     }
     if (Array.prototype.rest === undefined) {
         Array.prototype.rest = function() { return this.slice(1); };
@@ -74,7 +74,7 @@ module.exports = (function() {
                     return empty(error(message(s.pos, "End of input", [])));
                 } else {
                     var next;
-                    next = s.input.tokenAt(0);
+                    next = s.input.first();
                     if (pred.call(null, next)) {
                         var newPos = nextPos(s.pos, next);
                         var newState = state(s.input.rest(), newPos);
