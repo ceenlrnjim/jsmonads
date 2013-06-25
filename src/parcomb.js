@@ -21,7 +21,7 @@ module.exports = (function() {
         String.prototype.rest = function() { return this.substring(1); };
     }
     if (Array.prototype.first === undefined) {
-        Array.prototype.first = function(i) { return this[i]; };
+        Array.prototype.first = function() { return this[0]; };
     }
     if (Array.prototype.rest === undefined) {
         Array.prototype.rest = function() { return this.slice(1); };
@@ -74,7 +74,7 @@ module.exports = (function() {
                     return empty(error(message(s.pos, "End of input", [])));
                 } else {
                     var next;
-                    next = s.input.first();
+                    next = s.input.first(0);
                     if (pred.call(null, next)) {
                         var newPos = nextPos(s.pos, next);
                         var newState = state(s.input.rest(), newPos);
