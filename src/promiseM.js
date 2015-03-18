@@ -7,9 +7,9 @@ module.exports = (function() {
 
         var _bind = function(ma, f) {
             return function(cb) {
-                ma.call(null, function(res) {
+                ma(function(res) {
                     monad.bind(res, function(v) {
-                        f.call(null, v).call(null, cb);
+                        f(v)(cb);
                     });
                 });
             };
@@ -21,10 +21,10 @@ module.exports = (function() {
 
         var _mplus = function(ma,mb) {
             return function(cb) {
-                ma.call(null, function(va) {
-                    mb.call(null, function(vb) {
+                ma(function(va) {
+                    mb(function(vb) {
                         // TODO: setTimeout here?
-                        cb.call(null, monad.mplus(va,vb));
+                        cb(monad.mplus(va,vb));
                     })
                 });
             };
@@ -36,7 +36,7 @@ module.exports = (function() {
     var _lift = function(mv) {
         return function(cb) {
             setTimeout(function() {
-                cb.call(null,mv);
+                cb(mv);
             },0);
         };
     };

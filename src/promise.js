@@ -6,23 +6,23 @@ module.exports = (function() {
     var _pure = function(v) {
         return function(cb) {
             setTimeout(function() {
-                cb.call(null, v);
+                cb(v);
             },0);
         };
     };
 
     var _bind = function(pa, f) {
         return function(cb) {
-            pa.call(null, function(pa_v) {
-                f.call(null, pa_v).call(null, cb);
+            pa(function(pa_v) {
+                f(pa_v)(cb);
             });
         };
     };
 
     var _sequence = function(ma, f) {
         return function(cb) {
-            pa.call(null, function(unused) {
-                f.call(null).call(null, cb);
+            pa(function(unused) {
+                f()(cb);
             });
         };
     };
@@ -31,13 +31,13 @@ module.exports = (function() {
     var _fromCallbacks = function(f) {
         return function(cb) {
             var s = function(v) {
-                cb.call(null, either.right(v));
+                cb(either.right(v));
             };
             var f = function(r) {
-                cb.call(null, either.left(r));
+                cb(either.left(r));
             };
 
-            f.call(null, s, f);
+            f(s, f);
         };
     };
 

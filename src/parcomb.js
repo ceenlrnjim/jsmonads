@@ -235,7 +235,7 @@ module.exports = (function() {
 
         var label = function(p,exp) {
             return function(s) {
-                return match(p.call(null,s), {
+                return match(p(s), {
                     emptyError: function(errmsg) {
                         return empty(error(expect(errmsg, exp)));
                     },

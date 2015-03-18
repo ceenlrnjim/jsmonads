@@ -12,4 +12,5 @@ exports.testBind = function(test) {
     var reader = monads.reader;
 
     // TODO: need to test with an environment that doesn't support mutation
+    test.done();
 };

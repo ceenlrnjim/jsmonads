@@ -15,10 +15,10 @@ module.exports = (function() {
                 //using the value and state2 from the stateMonad,
                 //construct another StateM be invoking f(value) and then invoke
                 //that StateM function with sprime
-                return monad.bind(stm.call(null, s), function(vsp) {
+                return monad.bind(stm(s), function(vsp) {
                     var v = vsp[0];
                     var sprime = vsp[1];
-                    return f.call(null, v).call(null, sprime);
+                    return f(v)(sprime);
                 });
             };
         };
@@ -31,13 +31,13 @@ module.exports = (function() {
 
         var _mplus = function(stm1, stm2) {
             return function(s) {
-                return monad.mplus(stm1.call(null, s), stm2.call(null, s));
+                return monad.mplus(stm1(s), stm2(s));
             };
         };
 
         var _update = function(f) {
             return function(s) {
-                return monad.pure([s, f.call(null,s)]);
+                return monad.pure([s, f(s)]);
             };
         };
 

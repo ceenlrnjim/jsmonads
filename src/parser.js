@@ -125,7 +125,7 @@ module.exports = (function() {
 
     var _sequence = function(ma, f) {
         return _bind(ma, function(unused) {
-            return f.call(null);
+            return f();
         });
     };
 

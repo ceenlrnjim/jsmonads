@@ -4,7 +4,7 @@ module.exports = (function() {
     var _withMonoid = function(monoid) {
 
         var _bind = function(ma, f) {
-            var fres = f.call(null,ma[0]);
+            var fres = f(ma[0]);
             return [fres[0], monoid.mappend(ma[1], fres[1])];
         };
 
@@ -13,7 +13,7 @@ module.exports = (function() {
         };
 
         var _sequence = function(ma, f) {
-            return f.call(null);
+            return f();
         };
 
         var _join = function(mma) {

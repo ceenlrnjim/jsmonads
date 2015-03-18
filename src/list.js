@@ -30,7 +30,7 @@ module.exports = (function() {
     var _sequence = function(ma, f) {
         var mapResult = new Array(ma.length);
         for (var i=0, n=ma.length;i<n;i++) {
-            mapResult[i] = f.call(null); // stripping out the argument
+            mapResult[i] = f(); // stripping out the argument
         }
         return _mconcat(mapResult);
     };

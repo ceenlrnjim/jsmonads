@@ -10,7 +10,7 @@ module.exports = (function() {
 
     var _bind = function(ma, f) {
         try {
-            return ma === null ? ma : f.call(null, ma);
+            return ma === null ? ma : f(ma);
         } catch (e) {
             _fail(e);
         }
@@ -23,7 +23,7 @@ module.exports = (function() {
     // >> :: Monad a -> (a -> Monad b) -> Monad b
     var _sequence = function(ma, f) {
         _bind(ma, function(unused) {
-            return f.call(null);
+            return f();
         });
     };
 

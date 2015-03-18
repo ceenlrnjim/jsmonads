@@ -19,7 +19,7 @@ module.exports = (function() {
     var _bind = function(ma, f) {
         return function(env) {
             // f(ma(env))(env)
-            return f.call(null, ma.call(null, env)).call(null, env);
+            return f(ma(env))(env);
         };
     };
 
@@ -31,20 +31,20 @@ module.exports = (function() {
 
     var _local = function(envfn, ma) {
         return function(env) {
-            ma.call(null, envfn.call(null, env));
+            ma(envfn(env));
         };
     };
 
     var _join = function(mma) {
         return function(env) {
             // TODO: is this correct behavior?
-            return mma.call(null, env).call(null, env);
+            return mma(env)(env);
         };
     };
 
     var _sequence = function(ma, f) {
         return function(env) {
-            f.call(null).call(null, env);
+            f()(env);
         };
     };
 
