@@ -75,7 +75,7 @@ module.exports = (function() {
                 } else {
                     var next;
                     next = s.input.first(0);
-                    if (pred.call(null, next)) {
+                    if (pred(next)) {
                         var newPos = nextPos(s.pos, next);
                         var newState = state(s.input.rest(), newPos);
                         // TODO: eval to prevent space leak
@@ -174,7 +174,7 @@ module.exports = (function() {
 
         var tryP = function(p) {
             return function(inp) {
-                return match(p.call(null, inp), {
+                return match(p(inp), {
                     consumedError: function(reply) { return empty(error()); },
                     otherwise: function(result) { return result; } });
             };
@@ -195,7 +195,7 @@ module.exports = (function() {
                 return fys.reduce(function(x, fy) {
                     var f = fy[0];
                     var y = fy[1];
-                    var r = f.call(null, x, y);
+                    var r = f(x, y);
                     return r;
                 },xinit);
             });

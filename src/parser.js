@@ -62,12 +62,12 @@ module.exports = (function() {
     };
 
     var _caseReply = function(reply, onOk, onError) {
-        return reply.type === okTypeId ?  onOk.call(null, reply.result, reply.state.input, reply) : onError(null, reply);
+        return reply.type === okTypeId ?  onOk(reply.result, reply.state.input, reply) : onError(null, reply);
     };
 
     // handles laziness of the consumed/empty constructors
     var _caseConsumed = function(consumedOrEmpty, onEmpty, onConsumed) {
-        return consumedOrEmpty.type === emptyTypeId ? onEmpty.call(null, consumedOrEmpty.replyFn.call(null)) : onConsumed.call(null, consumedOrEmpty.replyFn.call(null));
+        return consumedOrEmpty.type === emptyTypeId ? onEmpty(consumedOrEmpty.replyFn()) : onConsumed(consumedOrEmpty.replyFn());
     };
 
     var _match = function(r, fns) {
@@ -75,19 +75,19 @@ module.exports = (function() {
             function onEmpty(reply) {
                 return _caseReply(reply,
                     function onOk(x,rest,s) {
-                        return fns.emptyOk ? fns.emptyOk.call(null,x,rest,s) : fns.otherwise.call(null, r); // need to validate we always want r and never reply here
+                        return fns.emptyOk ? fns.emptyOk(x,rest,s) : fns.otherwise( r); // need to validate we always want r and never reply here
                     },
                     function onError() {
-                        return fns.emptyError ? fns.emptyError.call(null, reply.msg) : fns.otherwise.call(null, r);
+                        return fns.emptyError ? fns.emptyError( reply.msg) : fns.otherwise( r);
                     });
             },
             function onConsumed(reply) {
                 return _caseReply(reply,
                     function onOk(x,rest,s) {
-                        return fns.consumedOk ? fns.consumedOk.call(null,x,rest,s) : fns.otherwise.call(null, r);
+                        return fns.consumedOk ? fns.consumedOk(x,rest,s) : fns.otherwise( r);
                     },
                     function onError() {
-                        return fns.consumedError ? fns.consumedError.call(null, reply.msg) : fns.otherwise.call(null, r);
+                        return fns.consumedError ? fns.consumedError( reply.msg) : fns.otherwise( r);
                     });
             });
     };
@@ -102,9 +102,9 @@ module.exports = (function() {
     // "Due to laziness...This 'early' returning is essential for the efficient behavior of the choice combinator"
     var _bind = function(ma, f) {
         return function(s) {
-            return _match(ma.call(null,s), {
+            return _match(ma(s), {
                 emptyOk: function(x,rest,reply) { 
-                    return f.call(null, x).call(null, reply.state); 
+                    return f( x)( reply.state); 
                 },
                 emptyError: function(errmsg) { 
                     return _empty(_error(errmsg));
@@ -114,7 +114,7 @@ module.exports = (function() {
                     return _lzConsumed(
                         function() {
                             var identity = function(v) { return v; };
-                            return _caseConsumed(f.call(null,x).call(null,reply.state), identity, identity);
+                            return _caseConsumed(f(x)(reply.state), identity, identity);
                         });
                 },
                 consumedError: function(reply) {
@@ -153,11 +153,11 @@ module.exports = (function() {
     // for this parser, mplus is the choice operator
     var _mplus = function(p, q) { 
         return function(s) {
-            var r = p.call(null, s);
+            var r = p( s);
             return _match(r, {
                 // if p failed, try q
                 emptyError: function(msg) { 
-                    return _match(q.call(null, s), {
+                    return _match(q( s), {
                         emptyError: function(msg2) {
                             return _mergeError(msg, msg2);
                         },
@@ -170,7 +170,7 @@ module.exports = (function() {
                 },
                 // if p succeeds without consuming input, q is favored if it does consume input (longest match rule)
                 emptyOk: function(reply) { 
-                    return _caseConsumed(q.call(null, s),
+                    return _caseConsumed(q( s),
                         function onEmpty() { return empty(reply); },
                         function onConsumed(r2) { return r2; });
                     },
@@ -195,7 +195,7 @@ module.exports = (function() {
             return errmsg;
         };
 
-        return _match(p.call(null, initial_state), {
+        return _match(p( initial_state), {
             emptyError: errout,
             emptyOk: okout,
             consumedError: errout,
